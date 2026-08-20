@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 232 50% 97%;
+    --foreground: 230 35% 15%;
+    --primary: 248 74% 63%;
+    --primary-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 35% 15%;
+    --border: 230 25% 92%;
+  }
+
+  body {
+    background-color: #F4F6FC;
+    color: #1E2238;
+    font-family: var(--font-sans), sans-serif;
+  }
+}
+
+/* ==========================================================
+   HyperFrames & Modern CSS Micro-Interactions
+   ========================================================== */
+
+/* 1. Playful 3D Button Press Effect */
+.btn-3d {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+  box-shadow: 0 6px 0 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn-3d:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn-3d-purple {
+  background-color: #6C5CE7;
+  color: #ffffff;
+  box-shadow: 0 5px 0 0 #4834D4, 0 10px 20px rgba(108, 92, 231, 0.3);
+}
+
+.btn-3d-purple:hover {
+  background-color: #7d6ef0;
+}
+
+.btn-3d-purple:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 0 #4834D4, 0 4px 10px rgba(108, 92, 231, 0.2);
+}
+
+.btn-3d-coral {
+  background-color: #FF6B4A;
+  color: #ffffff;
+  box-shadow: 0 5px 0 0 #D94828, 0 10px 20px rgba(255, 107, 74, 0.3);
+}
+
+.btn-3d-coral:hover {
+  background-color: #ff7d60;
+}
+
+.btn-3d-coral:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 0 #D94828, 0 4px 10px rgba(255, 107, 74, 0.2);
+}
+
+/* 2. Soft Cards & Hover Lift */
+.card-soft {
+  background: #FFFFFF;
+  border-radius: 1.5rem;
+  border: 1px solid #ECEEF8;
+  box-shadow: 0 8px 30px rgba(108, 92, 231, 0.06);
+}
+
+.card-soft-interactive {
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.card-soft-interactive:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 18px 40px rgba(108, 92, 231, 0.12);
+  border-color: #D5D8FB;
+}
+
+/* 3. Staggered Entrance Animations (HyperFrames Inspired) */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  70% {
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-pop-in {
+  animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 80ms; }
+.stagger-2 { animation-delay: 160ms; }
+.stagger-3 { animation-delay: 240ms; }
+.stagger-4 { animation-delay: 320ms; }
+
+/* Reduced motion preference respect */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-pop-in,
+  .animate-float-gentle,
+  .animate-pulse-glow,
+  .btn-3d,
+  .card-soft-interactive {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

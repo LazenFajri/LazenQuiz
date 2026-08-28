@@ -39,11 +39,21 @@ export default function QuizPlayPage() {
 
     // 2. Non-blocking summary save to Neon DB (saving only aggregated row to conserve storage)
     try {
+      let currentUsername = 'Player';
+      try {
+        const saved = localStorage.getItem('lazenUser');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.username) currentUsername = parsed.username;
+        }
+      } catch {}
+
       fetch('/api/quiz/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: activeQuiz.id || `sess_${Date.now()}`,
+          username: currentUsername,
           topic: activeQuiz.topic,
           difficulty: activeQuiz.difficulty,
           score: results.score,

@@ -5,10 +5,11 @@ export async function GET(req: Request) {
   try {
     await initDb();
 
-    // 1. Fetch top scores aggregated from Neon DB
+    // 1. Fetch top scores aggregated from Neon DB with username
     const topAttempts = await sql`
       SELECT 
         session_id,
+        COALESCE(username, 'Player') as username,
         topic,
         difficulty,
         score,

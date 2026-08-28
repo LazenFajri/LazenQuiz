@@ -64,9 +64,9 @@ export default function QuizHistoryPage() {
   };
 
   // Prepare top 3 podium items (real Neon DB records or fallbacks)
-  const top1 = dbLeaderboard[0] || { topic: 'Omnibus AI', score: 2130, time_spent_seconds: 45 };
-  const top2 = dbLeaderboard[1] || { topic: 'David Law', score: 1688, time_spent_seconds: 52 };
-  const top3 = dbLeaderboard[2] || { topic: 'Sheeva Jon', score: 1394, time_spent_seconds: 60 };
+  const top1 = dbLeaderboard[0] || { username: 'Omnibus AI', topic: 'Sains & Kosmos', score: 2130, time_spent_seconds: 45 };
+  const top2 = dbLeaderboard[1] || { username: 'David Law', topic: 'Teknologi & Web', score: 1688, time_spent_seconds: 52 };
+  const top3 = dbLeaderboard[2] || { username: 'Sheeva Jon', topic: 'Matematika', score: 1394, time_spent_seconds: 60 };
 
   const filteredHistory = [...history].reverse().filter((item) =>
     item.topic.toLowerCase().includes(searchQuery.toLowerCase())
@@ -134,7 +134,7 @@ export default function QuizHistoryPage() {
                 Top 3 Trivia Champions
               </h2>
               <p className="text-xs text-[#8C93B0] dark:text-slate-400">
-                Data langsung terintegrasi dari cloud database Neon PostgreSQL
+                Peringkat pemain tertinggi yang tercatat langsung di Neon DB
               </p>
             </div>
 
@@ -148,10 +148,13 @@ export default function QuizHistoryPage() {
                 <div className="w-6 h-6 rounded-full bg-[#E2E8F0] dark:bg-slate-700 text-[#475569] dark:text-slate-300 flex items-center justify-center font-black text-[10px] mb-1">
                   2
                 </div>
-                <div className="font-display font-bold text-xs text-center truncate max-w-[85px] dark:text-slate-200">
-                  {top2.topic}
+                <div className="font-display font-bold text-xs text-center truncate max-w-[95px] dark:text-white">
+                  {top2.username || 'Player'}
                 </div>
-                <div className="text-[11px] font-black text-[#6C5CE7] dark:text-indigo-400 mb-2">
+                <span className="text-[9px] text-[#8C93B0] dark:text-slate-400 truncate max-w-[85px] block">
+                  {top2.topic}
+                </span>
+                <div className="text-[11px] font-black text-[#6C5CE7] dark:text-indigo-400 mb-2 mt-0.5">
                   {top2.score} pts
                 </div>
                 {/* 3D Pillar */}
@@ -170,10 +173,13 @@ export default function QuizHistoryPage() {
                 <div className="w-7 h-7 rounded-full bg-[#FFB800] text-white flex items-center justify-center font-black text-xs mb-1 shadow-sm">
                   1
                 </div>
-                <div className="font-display font-black text-xs sm:text-sm text-center truncate max-w-[95px] dark:text-white">
-                  {top1.topic}
+                <div className="font-display font-black text-xs sm:text-sm text-center truncate max-w-[105px] dark:text-white">
+                  {top1.username || 'Champion'}
                 </div>
-                <div className="text-[11px] font-black text-[#FF6B4A] dark:text-rose-400 mb-2">
+                <span className="text-[9px] text-amber-500 font-bold truncate max-w-[95px] block">
+                  {top1.topic}
+                </span>
+                <div className="text-[11px] font-black text-[#FF6B4A] dark:text-rose-400 mb-2 mt-0.5">
                   {top1.score} pts
                 </div>
                 {/* 3D Pillar */}
@@ -191,10 +197,13 @@ export default function QuizHistoryPage() {
                 <div className="w-6 h-6 rounded-full bg-[#E59866] text-white flex items-center justify-center font-black text-[10px] mb-1">
                   3
                 </div>
-                <div className="font-display font-bold text-xs text-center truncate max-w-[85px] dark:text-slate-200">
-                  {top3.topic}
+                <div className="font-display font-bold text-xs text-center truncate max-w-[95px] dark:text-white">
+                  {top3.username || 'Player'}
                 </div>
-                <div className="text-[11px] font-black text-[#6C5CE7] dark:text-indigo-400 mb-2">
+                <span className="text-[9px] text-[#8C93B0] dark:text-slate-400 truncate max-w-[85px] block">
+                  {top3.topic}
+                </span>
+                <div className="text-[11px] font-black text-[#6C5CE7] dark:text-indigo-400 mb-2 mt-0.5">
                   {top3.score} pts
                 </div>
                 {/* 3D Pillar */}
@@ -242,9 +251,14 @@ export default function QuizHistoryPage() {
                     </div>
 
                     <div>
-                      <h4 className="font-display font-bold text-sm text-[#1E2238] dark:text-white">
-                        {item.topic}
-                      </h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display font-black text-sm text-[#1E2238] dark:text-white">
+                          {item.username || 'Player'}
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-md bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-400 font-bold text-[10px]">
+                          {item.topic}
+                        </span>
+                      </div>
                       <span className="text-[11px] text-[#8C93B0] dark:text-slate-400 font-medium">
                         {item.difficulty} • Durasi {item.time_spent_seconds}s
                       </span>
@@ -254,10 +268,10 @@ export default function QuizHistoryPage() {
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <span className="font-display font-black text-sm sm:text-base text-[#6C5CE7] dark:text-indigo-400 block">
-                        {item.score} pts
+                        {item.score * 100 || 0} pts
                       </span>
-                      <span className="text-[10px] text-[#10B981] font-extrabold flex items-center justify-end gap-0.5">
-                        <ArrowUp className="w-2.5 h-2.5" /> +100 XP
+                      <span className="text-[10px] text-[#8C93B0] dark:text-slate-400 font-bold block">
+                        {item.score}/{item.total_questions || 5} Benar
                       </span>
                     </div>
                   </div>

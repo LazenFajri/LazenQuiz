@@ -25,11 +25,12 @@ export async function initDb() {
       );
     `;
 
-    // 2. Table quiz_attempts
+    // 2. Table quiz_attempts with username column
     await sql`
       CREATE TABLE IF NOT EXISTS quiz_attempts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         session_id VARCHAR(64) NOT NULL,
+        username VARCHAR(50) DEFAULT 'Player',
         topic VARCHAR(100) NOT NULL,
         difficulty VARCHAR(20) NOT NULL,
         score INT NOT NULL,
@@ -38,6 +39,14 @@ export async function initDb() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
+
+    // Alter table to add username if old table exists
+    try {
+      await sql`
+        ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS username VARCHAR(50) DEFAULT 'Player';
+      `;
+    } catch {}
+
     console.log('Neon DB tables initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Neon DB tables:', error);

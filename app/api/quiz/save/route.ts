@@ -6,9 +6,10 @@ import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 // Strict Zod Validation Schema for Score Submission
 const saveQuizAttemptSchema = z.object({
   sessionId: z.string().trim().min(1).max(64).regex(/^[a-zA-Z0-9_-]+$/, 'Session ID must be alphanumeric'),
+  username: z.string().trim().max(50).optional().default('Player'),
   topic: z.string().trim().min(1).max(100).refine((val) => !/<[^>]*script/i.test(val), 'HTML tags forbidden'),
   difficulty: z.enum(['Easy', 'Medium', 'Hard']),
-  score: z.number().int().min(0).max(100, 'Score exceeds maximum allowed'),
+  score: z.number().int().min(0).max(1000, 'Score exceeds maximum allowed'),
   totalQuestions: z.number().int().min(1).max(100),
   timeSpentSeconds: z.number().int().min(0).max(7200, 'Time spent exceeds realistic threshold'),
 });
@@ -45,6 +46,7 @@ export async function POST(req: Request) {
 
     const {
       sessionId,
+      username,
       topic,
       difficulty,
       score,
@@ -59,6 +61,7 @@ export async function POST(req: Request) {
     const result = await sql`
       INSERT INTO quiz_attempts (
         session_id,
+        username,
         topic,
         difficulty,
         score,
@@ -67,6 +70,7 @@ export async function POST(req: Request) {
       )
       VALUES (
         ${sessionId},
+        ${username || 'Player'},
         ${topic},
         ${difficulty},
         ${score},

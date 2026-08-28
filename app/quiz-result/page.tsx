@@ -111,8 +111,22 @@ export default function QuizResultPage() {
     return true;
   });
 
+  const [claimedXp, setClaimedXp] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setClaimedXp(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <main className="py-4 sm:py-6 max-w-2xl mx-auto space-y-5">
+      {/* Floating XP Reward Notification: Only shown once when newly finishing a quiz */}
+      {!claimedXp && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-gradient-to-r from-[#FF6B4A] to-[#FFA07A] text-white shadow-xl flex items-center gap-2 font-display font-black text-xs animate-bounce">
+          <Flame className="w-4 h-4 fill-current" />
+          <span>+{earnedXP} XP Baru Ditambahkan ke Akunmu!</span>
+        </div>
+      )}
+
       {/* Top Action Nav */}
       <ScrollReveal direction="down" delay={0}>
         <div className="flex items-center justify-between gap-2">

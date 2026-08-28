@@ -289,50 +289,52 @@ export function HomePage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="flex flex-col gap-2.5">
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Contoh: Sejarah Majapahit, Web Development, Astronomi..."
-              className="flex-1 px-4 py-3 bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold text-[#1E2238] dark:text-white placeholder-[#94A3B8] dark:placeholder-slate-500 focus:outline-none focus:border-[#6C5CE7] dark:focus:border-indigo-500 transition-all"
+              placeholder="Contoh: Sejarah Majapahit, Web Development, Fisika..."
+              className="w-full px-4 py-3 bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold text-[#1E2238] dark:text-white placeholder-[#94A3B8] dark:placeholder-slate-500 focus:outline-none focus:border-[#6C5CE7] dark:focus:border-indigo-500 transition-all"
             />
 
-            {/* Quick Difficulty Pills */}
-            <div className="flex items-center gap-1.5 p-1 bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 rounded-2xl">
-              {(['Easy', 'Medium', 'Hard'] as const).map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setDifficulty(d)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    difficulty === d
-                      ? 'bg-[#6C5CE7] dark:bg-indigo-600 text-white shadow-sm'
-                      : 'text-[#646D89] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white'
-                  }`}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+              {/* Quick Difficulty Pills */}
+              <div className="flex items-center gap-1 p-1 bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 rounded-2xl flex-1 sm:flex-none justify-between sm:justify-start">
+                {(['Easy', 'Medium', 'Hard'] as const).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDifficulty(d)}
+                    className={`flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      difficulty === d
+                        ? 'bg-[#6C5CE7] dark:bg-indigo-600 text-white shadow-sm'
+                        : 'text-[#646D89] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white'
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
 
-            <button
-              onClick={() => handleStartAIQuiz()}
-              disabled={loading}
-              className="px-5 py-3 rounded-2xl btn-3d-brand text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 flex-shrink-0 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Meracik Soal AI...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Generate Kuis</span>
-                </>
-              )}
-            </button>
+              <button
+                onClick={() => handleStartAIQuiz()}
+                disabled={loading}
+                className="w-full sm:w-auto px-5 py-3 rounded-2xl btn-3d-brand text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 flex-shrink-0 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Meracik Soal AI...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Generate Kuis</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </ScrollReveal>

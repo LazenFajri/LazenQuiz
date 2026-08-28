@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Trophy,
@@ -10,31 +10,48 @@ import {
   Award,
   Crown,
   Medal,
+  Clock,
   User,
   GraduationCap,
-  Briefcase,
-  Compass,
-  Rocket,
+  Globe2,
+  Users2,
+  Sparkles,
+  ArrowUp,
+  ArrowDown,
+  Loader2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { useQuizStorage } from '@/hooks/useQuizStorage';
 
-const mockTopPlayers = [
-  { rank: 1, name: 'Pedro (Genius)', points: '3,645 pts', icon: <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" /> },
-  { rank: 2, name: 'Andrew (Pro)', points: '3,496 pts', icon: <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" /> },
-  { rank: 3, name: 'Freida (Explorer)', points: '3,178 pts', icon: <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" /> },
-  { rank: 4, name: 'Clinton (Ace)', points: '2,846 pts', icon: <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" /> },
-];
-
 export default function QuizHistoryPage() {
   const { history, clearHistory, removeFromHistory } = useQuizStorage();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'world' | 'weekly' | 'my_history'>('world');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dbLeaderboard, setDbLeaderboard] = useState<any[]>([]);
+  const [dbStats, setDbStats] = useState({ total_plays: 0, total_points: 0, avg_score: 0 });
+  const [loading, setLoading] = useState(true);
+
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // Fetch live real data from Neon PostgreSQL
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/leaderboard')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data) {
+          setDbLeaderboard(json.data);
+        }
+        if (json.stats) {
+          setDbStats(json.stats);
+        }
+      })
+      .catch((err) => console.error('Fetch Leaderboard Error:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
   const formatDate = (iso?: string) => {
     if (!iso) return '-';
@@ -46,276 +63,266 @@ export default function QuizHistoryPage() {
     });
   };
 
-  const totalQuizzes = history.length;
-  const bestScore = history.length > 0 ? Math.max(...history.map((h) => h.score || 0)) : 0;
-  const totalXP = history.reduce((acc, h) => acc + (h.score || 0) * 100, 0);
+  // Prepare top 3 podium items (real Neon DB records or fallbacks)
+  const top1 = dbLeaderboard[0] || { topic: 'Omnibus AI', score: 2130, time_spent_seconds: 45 };
+  const top2 = dbLeaderboard[1] || { topic: 'David Law', score: 1688, time_spent_seconds: 52 };
+  const top3 = dbLeaderboard[2] || { topic: 'Sheeva Jon', score: 1394, time_spent_seconds: 60 };
 
   const filteredHistory = [...history].reverse().filter((item) =>
     item.topic.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleInspect = (item: any) => {
-    localStorage.setItem('lastQuizResult', JSON.stringify(item));
-    localStorage.setItem('lastQuizInfo', JSON.stringify(item));
-    router.push('/quiz-result');
-  };
-
   return (
-    <main className="py-6 sm:py-12 max-w-4xl mx-auto space-y-6 sm:space-y-8">
-      {/* Header */}
+    <main className="py-4 sm:py-6 max-w-4xl mx-auto space-y-6">
+      {/* Header & Tabs Navigation */}
       <ScrollReveal direction="down" delay={0}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#6C5CE7] uppercase mb-0.5">
-              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFB800]" />
-              <span>Leaderboard & History</span>
+            <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#6C5CE7] dark:text-indigo-400 uppercase mb-0.5">
+              <Trophy className="w-4 h-4 text-[#FFB800]" />
+              <span>Realtime Neon DB Cloud Leaderboard</span>
             </div>
-            <h1 className="font-display text-2xl sm:text-4xl font-black text-[#1E2238]">
-              Hall of Fame
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-[#1E2238] dark:text-white">
+              Hall of Fame & Ranking
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {history.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsClearModalOpen(true)}
-                className="text-xs text-[#EF4444] border-[#FCA5A5] hover:bg-[#FEF2F2]"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Bersihkan</span>
-              </Button>
-            )}
-
-            <Button
-              variant="coral"
-              size="sm"
-              onClick={() => router.push('/quiz-setup')}
-              className="shadow-coral-glow text-xs"
+          {/* Filter Segment Pills (World, Weekly, Riwayat Kamu) */}
+          <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-slate-900 border border-[#EAEFF8] dark:border-slate-800 rounded-2xl shadow-sm">
+            <button
+              onClick={() => setActiveTab('world')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                activeTab === 'world'
+                  ? 'bg-[#6C5CE7] text-white shadow-sm'
+                  : 'text-[#646D89] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white'
+              }`}
             >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Kuis Baru</span>
-            </Button>
+              World Rank
+            </button>
+
+            <button
+              onClick={() => setActiveTab('weekly')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                activeTab === 'weekly'
+                  ? 'bg-[#6C5CE7] text-white shadow-sm'
+                  : 'text-[#646D89] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white'
+              }`}
+            >
+              Weekly Best
+            </button>
+
+            <button
+              onClick={() => setActiveTab('my_history')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                activeTab === 'my_history'
+                  ? 'bg-[#6C5CE7] text-white shadow-sm'
+                  : 'text-[#646D89] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white'
+              }`}
+            >
+              Riwayat Saya ({history.length})
+            </button>
           </div>
         </div>
       </ScrollReveal>
 
-      {/* Podium Top 3 Leaderboard */}
-      <ScrollReveal direction="up" delay={100}>
-        <div className="bg-gradient-to-br from-[#6C5CE7] to-[#5842D8] text-white p-5 sm:p-8 rounded-3xl sm:rounded-4xl shadow-soft-lg">
-          <div className="text-center mb-4 sm:mb-6">
-            <h2 className="font-display font-black text-lg sm:text-2xl text-white">
-              Top Players of The Week
-            </h2>
-            <p className="text-[11px] sm:text-xs text-purple-200">Raih skor tertinggi untuk masuk ke podium juara!</p>
-          </div>
-
-          {/* 3 Columns Podium */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-6 items-end max-w-lg mx-auto pt-2 sm:pt-4">
-            {/* Rank 2 */}
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center mb-1.5 shadow-soft-sm">
-                {mockTopPlayers[1].icon}
-              </div>
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-300 text-slate-800 flex items-center justify-center font-black text-[10px] sm:text-xs mb-1">
-                2
-              </div>
-              <div className="font-display font-bold text-[11px] sm:text-sm text-center truncate max-w-[80px] sm:max-w-none">
-                {mockTopPlayers[1].name.split(' ')[0]}
-              </div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-purple-200 mb-1.5">
-                {mockTopPlayers[1].points}
-              </div>
-              <div className="w-full h-18 sm:h-24 bg-white/20 rounded-t-xl sm:rounded-t-2xl flex items-center justify-center font-display font-black text-sm sm:text-lg">
-                2nd
-              </div>
+      {/* 3D Stepped Podium */}
+      {activeTab !== 'my_history' && (
+        <ScrollReveal direction="up" delay={100}>
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-[#EAEFF8] dark:border-slate-800 shadow-sm transition-colors">
+            <div className="text-center mb-6">
+              <h2 className="font-display font-black text-xl text-[#1E2238] dark:text-white">
+                Top 3 Trivia Champions
+              </h2>
+              <p className="text-xs text-[#8C93B0] dark:text-slate-400">
+                Data langsung terintegrasi dari cloud database Neon PostgreSQL
+              </p>
             </div>
 
-            {/* Rank 1 */}
-            <div className="flex flex-col items-center">
-              <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-[#FFD700] mb-1 animate-bounce" />
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/25 border border-white/30 flex items-center justify-center mb-1.5 shadow-soft-sm">
-                {mockTopPlayers[0].icon}
+            {/* Stepped 3D Podium Layout */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end max-w-md mx-auto pt-4">
+              {/* Rank 2 (Silver Pillar) */}
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-400 flex items-center justify-center font-display font-black text-sm mb-1.5 shadow-sm">
+                  <User className="w-6 h-6" />
+                </div>
+                <div className="w-6 h-6 rounded-full bg-[#E2E8F0] dark:bg-slate-700 text-[#475569] dark:text-slate-300 flex items-center justify-center font-black text-[10px] mb-1">
+                  2
+                </div>
+                <div className="font-display font-bold text-xs text-center truncate max-w-[85px] dark:text-slate-200">
+                  {top2.topic}
+                </div>
+                <div className="text-[11px] font-black text-[#6C5CE7] dark:text-indigo-400 mb-2">
+                  {top2.score} pts
+                </div>
+                {/* 3D Pillar */}
+                <div className="w-full h-24 bg-gradient-to-t from-[#E2E8F0] dark:from-slate-800 to-[#F1F5F9] dark:to-slate-700 border-t-4 border-[#CBD5E1] dark:border-slate-600 rounded-t-2xl flex flex-col items-center justify-center shadow-inner">
+                  <span className="font-display font-black text-sm text-[#64748B] dark:text-slate-300">2nd</span>
+                  <span className="text-[10px] text-[#94A3B8] dark:text-slate-400 font-bold">{top2.time_spent_seconds}s</span>
+                </div>
               </div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FFD700] text-amber-900 flex items-center justify-center font-black text-xs mb-1 shadow-md">
-                1
-              </div>
-              <div className="font-display font-black text-xs sm:text-base text-center truncate max-w-[90px] sm:max-w-none">
-                {mockTopPlayers[0].name.split(' ')[0]}
-              </div>
-              <div className="text-[10px] sm:text-[11px] font-extrabold text-[#FFEAA7] mb-1.5">
-                {mockTopPlayers[0].points}
-              </div>
-              <div className="w-full h-24 sm:h-32 bg-white/30 rounded-t-xl sm:rounded-t-2xl flex items-center justify-center font-display font-black text-lg sm:text-2xl text-[#FFEAA7]">
-                1st
-              </div>
-            </div>
 
-            {/* Rank 3 */}
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center mb-1.5 shadow-soft-sm">
-                {mockTopPlayers[2].icon}
+              {/* Rank 1 (Gold Central Highest Pillar) */}
+              <div className="flex flex-col items-center -mt-4">
+                <Crown className="w-7 h-7 text-[#FFB800] mb-1 animate-bounce" />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FFB800] to-[#FFEAA7] text-amber-900 flex items-center justify-center font-display font-black text-lg mb-1.5 shadow-md">
+                  <User className="w-7 h-7" />
+                </div>
+                <div className="w-7 h-7 rounded-full bg-[#FFB800] text-white flex items-center justify-center font-black text-xs mb-1 shadow-sm">
+                  1
+                </div>
+                <div className="font-display font-black text-xs sm:text-sm text-center truncate max-w-[95px] dark:text-white">
+                  {top1.topic}
+                </div>
+                <div className="text-[11px] font-black text-[#FF6B4A] dark:text-rose-400 mb-2">
+                  {top1.score} pts
+                </div>
+                {/* 3D Pillar */}
+                <div className="w-full h-36 bg-gradient-to-t from-[#FF9F43] to-[#FECA57] border-t-4 border-[#FF6B4A] rounded-t-2xl flex flex-col items-center justify-center text-white shadow-md">
+                  <span className="font-display font-black text-lg text-white">1st</span>
+                  <span className="text-[10px] text-amber-100 font-bold">{top1.time_spent_seconds}s</span>
+                </div>
               </div>
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#CD7F32] text-white flex items-center justify-center font-black text-[10px] sm:text-xs mb-1">
-                3
+
+              {/* Rank 3 (Bronze Pillar) */}
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#FFF3E8] dark:bg-rose-950/60 text-[#FF6B4A] dark:text-rose-400 flex items-center justify-center font-display font-black text-sm mb-1.5 shadow-sm">
+                  <User className="w-6 h-6" />
+                </div>
+                <div className="w-6 h-6 rounded-full bg-[#E59866] text-white flex items-center justify-center font-black text-[10px] mb-1">
+                  3
+                </div>
+                <div className="font-display font-bold text-xs text-center truncate max-w-[85px] dark:text-slate-200">
+                  {top3.topic}
+                </div>
+                <div className="text-[11px] font-black text-[#6C5CE7] dark:text-indigo-400 mb-2">
+                  {top3.score} pts
+                </div>
+                {/* 3D Pillar */}
+                <div className="w-full h-20 bg-gradient-to-t from-[#EDBB99] dark:from-amber-950/60 to-[#F5CBA7] dark:to-amber-900/60 border-t-4 border-[#DC7633] rounded-t-2xl flex flex-col items-center justify-center text-[#7E5109] dark:text-amber-200 shadow-inner">
+                  <span className="font-display font-black text-sm">3rd</span>
+                  <span className="text-[10px] text-[#A04000] dark:text-amber-300 font-bold">{top3.time_spent_seconds}s</span>
+                </div>
               </div>
-              <div className="font-display font-bold text-[11px] sm:text-sm text-center truncate max-w-[80px] sm:max-w-none">
-                {mockTopPlayers[2].name.split(' ')[0]}
-              </div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-purple-200 mb-1.5">
-                {mockTopPlayers[2].points}
-              </div>
-              <div className="w-full h-14 sm:h-18 bg-white/15 rounded-t-xl sm:rounded-t-2xl flex items-center justify-center font-display font-black text-xs sm:text-base">
-                3rd
-              </div>
-            </div>
-          </div>
-        </div>
-      </ScrollReveal>
-
-      {/* User Progress Stats Strip */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <ScrollReveal direction="up" delay={150}>
-          <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-[#ECEEF8] shadow-soft-sm text-center">
-            <div className="text-[10px] sm:text-xs font-bold text-[#8C93B0] uppercase mb-1">Kuis Dimainkan</div>
-            <div className="font-display font-black text-xl sm:text-2xl text-[#1E2238]">{totalQuizzes} Sesi</div>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal direction="up" delay={200}>
-          <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-[#ECEEF8] shadow-soft-sm text-center">
-            <div className="text-[10px] sm:text-xs font-bold text-[#8C93B0] uppercase mb-1">Skor Terbaik</div>
-            <div className="font-display font-black text-xl sm:text-2xl text-[#6C5CE7]">{bestScore} Benar</div>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal direction="up" delay={250}>
-          <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-[#ECEEF8] shadow-soft-sm text-center">
-            <div className="text-[10px] sm:text-xs font-bold text-[#8C93B0] uppercase mb-1">Total XP Dikumpulkan</div>
-            <div className="font-display font-black text-xl sm:text-2xl text-[#FF6B4A]">+{totalXP} XP</div>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      {/* History Records List */}
-      <div className="space-y-4">
-        <ScrollReveal direction="up" delay={280}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="font-display text-xl sm:text-2xl font-black text-[#1E2238]">
-              Riwayat Pengerjaan Kamu
-            </h2>
-
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari topik kuis..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-[#E2E8F0] rounded-2xl text-xs font-semibold text-[#1E2238] placeholder-[#94A3B8] focus:outline-none focus:border-[#6C5CE7]"
-              />
             </div>
           </div>
         </ScrollReveal>
+      )}
 
-        {filteredHistory.length === 0 ? (
-          <ScrollReveal direction="up" delay={300}>
-            <div className="bg-white p-8 sm:p-10 rounded-2xl sm:rounded-3xl text-center border border-[#ECEEF8] shadow-soft-sm text-[#8C93B0] text-xs sm:text-sm font-semibold">
-              {history.length === 0
-                ? 'Belum ada riwayat kuis. Mainkan kuis pertamamu sekarang!'
-                : 'Tidak ada riwayat yang cocok dengan pencarian.'}
+      {/* List Ranking Tabel */}
+      {activeTab !== 'my_history' ? (
+        <section className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display font-black text-base text-[#1E2238] dark:text-white">
+              Peringkat Live di Cloud ({dbLeaderboard.length} Rekor)
+            </h3>
+            <span className="text-xs font-bold text-[#6C5CE7] dark:text-indigo-400">
+              {dbStats.total_points} Total Points Terakumulasi
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl text-center border border-[#EAEFF8] dark:border-slate-800 flex items-center justify-center gap-2 text-xs font-bold text-[#6C5CE7] dark:text-indigo-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Memuat data leaderboard dari Neon DB...</span>
             </div>
-          </ScrollReveal>
-        ) : (
-          <div className="space-y-2.5 sm:space-y-3">
-            {filteredHistory.map((item, index) => {
-              const pct =
-                item.total && item.total > 0
-                  ? Math.round(((item.score || 0) / item.total) * 100)
-                  : 0;
-
-              return (
-                <ScrollReveal
-                  key={item.id || index}
-                  direction="up"
-                  delay={index * 60}
+          ) : dbLeaderboard.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl text-center border border-[#EAEFF8] dark:border-slate-800 text-[#8C93B0] dark:text-slate-400 text-xs font-bold">
+              Belum ada data pengerjaan di cloud. Mainkan kuis pertama kamu!
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {dbLeaderboard.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-[#EAEFF8] dark:border-slate-800 shadow-sm hover:border-[#6C5CE7]/30 dark:hover:border-indigo-500/40 transition-all flex items-center justify-between gap-3"
                 >
-                  <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-[#ECEEF8] shadow-soft-sm hover:border-[#D5D8FB] hover:shadow-soft-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                    <div
-                      className="flex-1 cursor-pointer"
-                      onClick={() => handleInspect(item)}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-display font-bold text-base sm:text-lg text-[#1E2238] hover:text-[#6C5CE7] transition-colors">
-                          {item.topic}
-                        </h3>
-                        <Badge variant="purple" size="sm">
-                          {item.difficulty}
-                        </Badge>
-                      </div>
-                      <div className="text-[11px] sm:text-xs font-bold text-[#8C93B0]">
-                        {formatDate(item.timestamp)} • {item.questionCount || item.questions?.length || 0} Soal
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-400 font-display font-black text-xs flex items-center justify-center flex-shrink-0">
+                      {idx + 1}
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#F1F5F9]">
-                      <div
-                        className="text-left sm:text-right cursor-pointer"
-                        onClick={() => handleInspect(item)}
-                      >
-                        <div className="font-display font-black text-lg sm:text-xl text-[#6C5CE7]">
-                          {item.score || 0}/{item.total || 0}
-                        </div>
-                        <div className="text-[10px] sm:text-[11px] font-bold text-[#8C93B0]">{pct}% Akurasi</div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleInspect(item)}
-                          className="text-xs"
-                        >
-                          Detail
-                        </Button>
-                        <button
-                          onClick={() => setDeleteTargetId(item.id)}
-                          className="p-2 rounded-xl text-[#94A3B8] hover:text-[#EF4444] hover:bg-[#FEF2F2] transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <div>
+                      <h4 className="font-display font-bold text-sm text-[#1E2238] dark:text-white">
+                        {item.topic}
+                      </h4>
+                      <span className="text-[11px] text-[#8C93B0] dark:text-slate-400 font-medium">
+                        {item.difficulty} • Durasi {item.time_spent_seconds}s
+                      </span>
                     </div>
                   </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
-      {/* Confirmation Modals */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <span className="font-display font-black text-sm sm:text-base text-[#6C5CE7] dark:text-indigo-400 block">
+                        {item.score} pts
+                      </span>
+                      <span className="text-[10px] text-[#10B981] font-extrabold flex items-center justify-end gap-0.5">
+                        <ArrowUp className="w-2.5 h-2.5" /> +100 XP
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        /* My History Tab */
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-display font-black text-base text-[#1E2238] dark:text-white">
+              Riwayat Offline Browser ({filteredHistory.length})
+            </h3>
+            {history.length > 0 && (
+              <button
+                onClick={() => setIsClearModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold"
+              >
+                Bersihkan
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {filteredHistory.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-[#EAEFF8] dark:border-slate-800 shadow-sm flex items-center justify-between gap-3"
+              >
+                <div>
+                  <h4 className="font-display font-bold text-sm text-[#1E2238] dark:text-white">{item.topic}</h4>
+                  <span className="text-[11px] text-[#8C93B0] dark:text-slate-400 font-medium">
+                    {formatDate(item.timestamp)} • Skor: {item.score}/{item.total}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('lastQuizResult', JSON.stringify(item));
+                      localStorage.setItem('lastQuizInfo', JSON.stringify(item));
+                      router.push('/quiz-result');
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-400 text-xs font-bold hover:bg-[#E4DEFF] dark:hover:bg-indigo-900/60"
+                  >
+                    Detail Review
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Modal Clear History */}
       <Modal
         isOpen={isClearModalOpen}
         onClose={() => setIsClearModalOpen(false)}
-        title="Bersihkan Semua Riwayat?"
-        description="Semua catatan skor dan riwayat pengerjaanmu akan dihapus dari perangkat ini."
+        title="Bersihkan Riwayat Lokal?"
+        description="Semua riwayat pengerjaan di browser ini akan dibersihkan."
         confirmLabel="Hapus Semua"
         variant="danger"
         onConfirm={clearHistory}
-      />
-
-      <Modal
-        isOpen={!!deleteTargetId}
-        onClose={() => setDeleteTargetId(null)}
-        title="Hapus Sesi Kuis Ini?"
-        description="Data pengerjaan untuk topik ini akan dihapus permanen."
-        confirmLabel="Hapus"
-        variant="danger"
-        onConfirm={() => {
-          if (deleteTargetId) removeFromHistory(deleteTargetId);
-        }}
       />
     </main>
   );

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Sparkles,
@@ -22,278 +22,372 @@ import {
   Medal,
   Crown,
   User,
+  Plus,
+  Compass,
+  CheckCircle2,
+  TrendingUp,
+  Loader2,
+  BrainCircuit,
+  Calculator,
+  FlaskConical,
+  BookOpen,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollReveal } from '@/components/ui/ScrollReveal';
-import { FEATURED_CATEGORIES } from '@/lib/mockData';
 import { useQuizStorage } from '@/hooks/useQuizStorage';
+import { ScrollReveal } from '@/components/ui/ScrollReveal';
+import { ErrorFallbackModal } from '@/components/ui/ErrorFallbackModal';
+import { MOCK_QUESTION_BANK, MockQuestion } from '@/lib/mockData';
 
-const categoryIcons = [
-  <Code2 key="code" className="w-5 h-5 sm:w-6 sm:h-6 text-[#6C5CE7]" />,
-  <Atom key="atom" className="w-5 h-5 sm:w-6 sm:h-6 text-[#FF6B4A]" />,
-  <Landmark key="landmark" className="w-5 h-5 sm:w-6 sm:h-6 text-[#00B894]" />,
-  <Globe2 key="globe" className="w-5 h-5 sm:w-6 sm:h-6 text-[#0984E3]" />,
-  <Film key="film" className="w-5 h-5 sm:w-6 sm:h-6 text-[#E84393]" />,
-  <Lightbulb key="bulb" className="w-5 h-5 sm:w-6 sm:h-6 text-[#F59E0B]" />,
+const dribbbleCategories = [
+  {
+    id: 'math',
+    name: 'Math & Logic',
+    questionsCount: '15 Soal',
+    badge: 'Trending',
+    gradient: 'from-[#FF6B8B] via-[#FF8E53] to-[#FFA07A]',
+    shadow: 'shadow-rose-500/20',
+    icon: <Calculator className="w-7 h-7 text-white" />,
+    desc: 'Uji logika hitung & pola angka cepat',
+  },
+  {
+    id: 'science',
+    name: 'Science Lab',
+    questionsCount: '20 Soal',
+    badge: 'Popular',
+    gradient: 'from-[#00C9FF] via-[#92FE9D] to-[#55EFC4]',
+    shadow: 'shadow-teal-500/20',
+    icon: <FlaskConical className="w-7 h-7 text-white" />,
+    desc: 'Eksperimen fakta sains, alam, & fisika',
+  },
+  {
+    id: 'tech',
+    name: 'Tech & Coding',
+    questionsCount: '25 Soal',
+    badge: 'Hot',
+    gradient: 'from-[#6C5CE7] via-[#8C7AE6] to-[#A29BFE]',
+    shadow: 'shadow-indigo-500/20',
+    icon: <Code2 className="w-7 h-7 text-white" />,
+    desc: 'Algoritma, AI, Web, & inovasi digital',
+  },
 ];
 
-const topChampions = [
-  { name: 'Albert Einstein', role: 'Genius Tier', score: '3,840 pts', icon: <Atom className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" /> },
-  { name: 'Ada Lovelace', role: 'Code Master', score: '3,650 pts', icon: <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" /> },
-  { name: 'Isaac Newton', role: 'Physics Guru', score: '3,490 pts', icon: <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" /> },
+const quickRecentQuizzes = [
+  { name: 'Technology & AI', progress: 85, badgeColor: 'bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-400', icon: <Code2 className="w-4 h-4 text-[#6C5CE7] dark:text-indigo-400" /> },
+  { name: 'World History & Facts', progress: 60, badgeColor: 'bg-[#FFF3E8] dark:bg-rose-950/60 text-[#FF6B4A] dark:text-rose-400', icon: <Landmark className="w-4 h-4 text-[#FF6B4A] dark:text-rose-400" /> },
+  { name: 'Science & Cosmos', progress: 100, badgeColor: 'bg-[#E0F9F3] dark:bg-teal-950/60 text-[#00B894] dark:text-teal-400', icon: <Atom className="w-4 h-4 text-[#00B894] dark:text-teal-400" /> },
 ];
 
 export function HomePage() {
   const router = useRouter();
-  const { history, activeQuiz } = useQuizStorage();
+  const { history, setActiveQuiz } = useQuizStorage();
 
-  const totalQuizzes = history.length;
-  const totalXP = history.reduce((acc, h) => acc + (h.score || 0) * 100, 0);
+  // Real data state
+  const [topic, setTopic] = useState('');
+  const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
+  const [questionCount, setQuestionCount] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [dbStats, setDbStats] = useState({ total_plays: 0, total_points: 0 });
+
+  // Error Fallback Modal State
+  const [errorModal, setErrorModal] = useState<{
+    show: boolean;
+    type: 'rate_limit' | 'server_error' | 'offline';
+    title?: string;
+    message?: string;
+    retryAfterSeconds?: number;
+  }>({
+    show: false,
+    type: 'server_error',
+  });
+
+  // Fetch real statistics from Neon DB
+  useEffect(() => {
+    fetch('/api/leaderboard')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.stats) {
+          setDbStats(json.stats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleStartAIQuiz = async (customTopic?: string) => {
+    const selectedTopic = (customTopic || topic).trim() || 'Teknologi & Pengetahuan Umum';
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/quiz/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: selectedTopic,
+          difficulty,
+          questionCount,
+        }),
+      });
+
+      if (res.status === 429) {
+        const errJson = await res.json();
+        setErrorModal({
+          show: true,
+          type: 'rate_limit',
+          title: 'Santai Dulu! Server Sedang Sibuk ⚡',
+          message: 'Kamu telah membuat beberapa kuis. Istirahat sejenak atau gunakan bank soal offline.',
+          retryAfterSeconds: errJson.retryAfterSeconds || 30,
+        });
+        return;
+      }
+
+      const data = await res.json();
+      if (data && data.questions && data.questions.length > 0) {
+        setActiveQuiz(data);
+        router.push('/quiz-play');
+      } else {
+        throw new Error('Gagal memuat soal kuis');
+      }
+    } catch (error) {
+      console.error(error);
+      setErrorModal({
+        show: true,
+        type: 'server_error',
+        title: 'Layanan Sedang Istirahat Sebentar',
+        message: 'Koneksi ke AI terhambat. Tenang, kamu bisa langsung bermain dengan bank soal cadangan lokal!',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUseOfflineBank = () => {
+    const allQs: MockQuestion[] = Object.values(MOCK_QUESTION_BANK).flat();
+    const shuffled = [...allQs].sort(() => 0.5 - Math.random()).slice(0, questionCount);
+
+    const offlineQuiz = {
+      id: `offline_${Date.now()}`,
+      topic: topic.trim() || 'Pengetahuan Umum (Offline)',
+      difficulty,
+      questionCount: shuffled.length,
+      questions: shuffled.map((q, idx) => ({
+        id: idx + 1,
+        question: q.question,
+        options: q.options,
+        correct: q.correct,
+        explanation: q.explanation,
+      })),
+    };
+
+    setActiveQuiz(offlineQuiz);
+    setErrorModal((prev) => ({ ...prev, show: false }));
+    router.push('/quiz-play');
+  };
 
   return (
-    <main className="py-6 sm:py-12 space-y-8 sm:space-y-12">
-      {/* 1. Hero Gamesin & Quizzo Style Banner */}
-      <ScrollReveal direction="up" delay={0}>
-        <section className="relative rounded-3xl sm:rounded-4xl bg-gradient-to-r from-[#6C5CE7] via-[#7D6EF0] to-[#8C7AE6] text-white p-6 sm:p-10 md:p-12 overflow-hidden shadow-soft-lg">
-          <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none animate-float-gentle" />
-          <div className="absolute bottom-0 left-1/3 w-48 sm:w-64 h-48 sm:h-64 bg-[#FF6B4A]/20 rounded-full blur-2xl translate-y-1/2 pointer-events-none" />
-
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-[11px] sm:text-xs font-extrabold uppercase tracking-wider mb-4 sm:mb-5 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-[#FFEAA7] animate-pulse-glow" />
-              <span>Trivia Battle & Knowledge Game</span>
+    <main className="py-4 sm:py-6 space-y-5 sm:space-y-6">
+      {/* 1. Profile Header & Level Progress Banner */}
+      <ScrollReveal direction="down" delay={0}>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-[#EAEFF8] dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors">
+          <div className="flex items-center gap-3.5">
+            <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#6C5CE7] to-[#8C7AE6] flex items-center justify-center text-white shadow-md shadow-[#6C5CE7]/30 text-xl font-display font-black flex-shrink-0">
+              <User className="w-7 h-7" />
             </div>
-
-            <h1 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] mb-3 sm:mb-4 text-white">
-              Play Quiz Together, <br className="hidden sm:block" />
-              <span className="text-[#FFEAA7]">Level Up Your Brain!</span>
-            </h1>
-
-            <p className="text-purple-100 text-xs sm:text-sm md:text-base leading-relaxed mb-6 sm:mb-8 max-w-xl">
-              Tantang wawasanmu dengan ribuan pertanyaan seru, kumpulkan XP, bertarung di arena 1v1, dan raih posisi teratas di Leaderboard!
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-              <Button
-                size="lg"
-                variant="coral"
-                onClick={() => router.push('/quiz-pvp')}
-                className="w-full sm:w-auto shadow-coral-glow justify-center group font-black"
-              >
-                <Swords className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
-                <span>Play 1v1 PvP Arena</span>
-              </Button>
-
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => router.push('/quiz-setup')}
-                className="w-full sm:w-auto bg-white text-[#6C5CE7] hover:bg-white/95 border-none shadow-soft-sm justify-center font-bold"
-              >
-                <span>Solo Practice</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
+            <div>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-xs font-bold text-[#8C93B0] dark:text-slate-400">Hi, Trivia Master!</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#FFF3E8] dark:bg-rose-950/60 text-[#FF6B4A] dark:text-rose-300 text-[10px] font-black uppercase">
+                  Gold Tier
+                </span>
+              </div>
+              <h1 className="font-display font-black text-xl sm:text-2xl text-[#1E2238] dark:text-white tracking-tight">
+                Let's test your brain today!
+              </h1>
             </div>
           </div>
-        </section>
+
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <button
+              onClick={() => router.push('/quiz-pvp')}
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl btn-3d-coral text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Swords className="w-4 h-4" />
+              <span>1v1 PvP Arena</span>
+            </button>
+
+            <button
+              onClick={() => router.push('/quiz-history')}
+              className="px-4 py-2.5 rounded-2xl bg-[#F0EDFF] dark:bg-indigo-950/60 hover:bg-[#E4DEFF] dark:hover:bg-indigo-900/60 text-[#6C5CE7] dark:text-indigo-300 font-black text-xs flex items-center justify-center gap-1.5 transition-all"
+            >
+              <Trophy className="w-4 h-4 text-[#FFB800]" />
+              <span>Leaderboard</span>
+            </button>
+          </div>
+        </div>
       </ScrollReveal>
 
-      {/* 2. Quick Player Status & Competitions Strip */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        <ScrollReveal direction="left" delay={100} className="h-full">
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#ECEEF8] shadow-soft-sm flex items-center justify-between h-full">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#FFF3E8] border border-[#FFE0CC] flex items-center justify-center text-[#FF6B4A] shadow-soft-sm flex-shrink-0">
-                <User className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <div>
-                <div className="text-[10px] sm:text-xs font-bold text-[#8C93B0] uppercase">Profil Kamu</div>
-                <h3 className="font-display font-black text-base sm:text-lg text-[#1E2238]">Juara Trivia</h3>
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#6C5CE7]">
-                  <Flame className="w-3.5 h-3.5 fill-current text-[#FF6B4A]" />
-                  <span>{totalXP} Total XP</span>
-                </div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-display font-black text-xl sm:text-2xl text-[#1E2238]">{totalQuizzes}</div>
-              <div className="text-[10px] sm:text-[11px] font-bold text-[#8C93B0]">Kuis Selesai</div>
-            </div>
-          </div>
-        </ScrollReveal>
+      {/* 2. Featured Interactive Carousel Cards */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-black text-lg text-[#1E2238] dark:text-white">
+            Pilih Kategori Populer
+          </h2>
+          <span className="text-xs font-bold text-[#6C5CE7] dark:text-indigo-400">AI Auto-Generated</span>
+        </div>
 
-        <ScrollReveal direction="right" delay={200} className="md:col-span-2 h-full">
-          <div className="bg-gradient-to-br from-[#1E2238] to-[#2D325A] text-white p-5 sm:p-6 rounded-3xl shadow-soft-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/10 flex items-center justify-center text-[#FFEAA7] flex-shrink-0">
-                <Swords className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2 py-0.5 rounded-full bg-[#FF6B4A] text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
-                    Live Arena
-                  </span>
-                  <span className="text-[11px] sm:text-xs text-slate-300 font-medium">1v1 PvP Match</span>
-                </div>
-                <h3 className="font-display font-extrabold text-sm sm:text-lg text-white">
-                  Battle of The Minds: Duel Pengetahuan
-                </h3>
-                <p className="text-[11px] sm:text-xs text-slate-300">Reward: +250 XP, Trophy Badges & Ranking Points</p>
-              </div>
-            </div>
-
-            <Button
-              size="sm"
-              variant="coral"
-              onClick={() => router.push('/quiz-pvp')}
-              className="w-full sm:w-auto shadow-coral-glow justify-center text-xs font-black"
-            >
-              Mulai Duel 1v1
-            </Button>
-          </div>
-        </ScrollReveal>
-      </section>
-
-      {/* 3. Discover Quizzes */}
-      <section className="space-y-4 sm:space-y-6">
-        <ScrollReveal direction="up" delay={50}>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h2 className="font-display text-xl sm:text-3xl font-black text-[#1E2238] tracking-tight">
-                Discover Quizzes
-              </h2>
-              <p className="text-xs sm:text-sm text-[#8C93B0] font-medium">
-                Pilih kategori favoritmu dan mulai uji ketangkasan menjawab!
-              </p>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/quiz-setup')}
-              className="text-[#6C5CE7] hover:bg-[#F0EDFF] text-xs font-bold flex-shrink-0"
-            >
-              Lihat Semua <ChevronRight className="w-4 h-4 ml-0.5" />
-            </Button>
-          </div>
-        </ScrollReveal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {FEATURED_CATEGORIES.map((cat, idx) => {
-            const bgGradients = [
-              'from-[#6C5CE7]/10 to-[#8C7AE6]/5 border-[#E6E2FF]',
-              'from-[#FF6B4A]/10 to-[#FFA07A]/5 border-[#FFE7E0]',
-              'from-[#00B894]/10 to-[#55EFC4]/5 border-[#E0F9F3]',
-              'from-[#0984E3]/10 to-[#74B9FF]/5 border-[#E2F0FD]',
-              'from-[#E84393]/10 to-[#FD79A8]/5 border-[#FDE6F1]',
-              'from-[#FDCB6E]/15 to-[#FFEAA7]/10 border-[#FFF5DC]',
-            ];
-
-            return (
-              <ScrollReveal
-                key={cat.id}
-                direction="up"
-                delay={idx * 60}
-                className="h-full"
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {dribbbleCategories.map((cat, idx) => (
+            <ScrollReveal key={cat.id} direction="up" delay={idx * 60}>
+              <div
+                onClick={() => handleStartAIQuiz(cat.name)}
+                className={`rounded-3xl p-5 sm:p-6 bg-gradient-to-br ${cat.gradient} text-white shadow-lg ${cat.shadow} cursor-pointer transform hover:-translate-y-1.5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between h-48 sm:h-52 group`}
               >
-                <div
-                  onClick={() => router.push(`/quiz-setup?topic=${cat.id}`)}
-                  className={`card-soft card-soft-interactive p-5 sm:p-6 bg-gradient-to-br ${bgGradients[idx % bgGradients.length]} cursor-pointer flex flex-col justify-between h-full`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white shadow-soft-sm flex items-center justify-center">
-                        {categoryIcons[idx % categoryIcons.length]}
-                      </div>
-                      <Badge variant={cat.popular ? 'coral' : 'purple'}>{cat.badge}</Badge>
-                    </div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
-                    <h3 className="font-display font-bold text-lg sm:text-xl text-[#1E2238] mb-1">
-                      {cat.name}
-                    </h3>
-                    <p className="text-xs text-[#646D89] leading-relaxed mb-4 sm:mb-6 font-medium">
-                      {cat.description}
-                    </p>
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    {cat.icon}
                   </div>
+                  <span className="px-2.5 py-1 rounded-full bg-white/25 backdrop-blur-md text-white font-extrabold text-[10px] uppercase tracking-wider">
+                    {cat.badge}
+                  </span>
+                </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-black/5 text-xs font-bold text-[#6C5CE7]">
-                    <span>Mulai Sekarang</span>
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-soft-sm">
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
+                <div className="relative z-10">
+                  <h3 className="font-display font-black text-xl text-white mb-0.5">
+                    {cat.name}
+                  </h3>
+                  <p className="text-white/85 text-xs font-medium mb-3">
+                    {cat.desc}
+                  </p>
+
+                  <div className="flex items-center justify-between text-xs font-extrabold text-white pt-2 border-t border-white/20">
+                    <span className="flex items-center gap-1">
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Mainkan Sekarang</span>
+                    </span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
-              </ScrollReveal>
-            );
-          })}
+              </div>
+            </ScrollReveal>
+          ))}
         </div>
       </section>
 
-      {/* 4. Weekly Leaderboard Podium */}
-      <ScrollReveal direction="up" delay={100}>
-        <section className="bg-white p-5 sm:p-8 rounded-3xl sm:rounded-4xl border border-[#ECEEF8] shadow-soft-sm space-y-5 sm:space-y-6">
-          <div className="flex items-center justify-between gap-2">
+      {/* 3. AI Custom Quiz Generator Bar */}
+      <ScrollReveal direction="up" delay={150}>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-[#EAEFF8] dark:border-slate-800 shadow-sm space-y-4 transition-colors">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-400 flex items-center justify-center">
+              <BrainCircuit className="w-4 h-4 text-[#6C5CE7] dark:text-indigo-400" />
+            </div>
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#6C5CE7] uppercase tracking-wider mb-0.5">
-                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFB800]" />
-                <span>Top Champions</span>
-              </div>
-              <h2 className="font-display text-lg sm:text-2xl font-black text-[#1E2238]">
-                Weekly Leaderboard
-              </h2>
+              <h3 className="font-display font-black text-base text-[#1E2238] dark:text-white">
+                Custom AI Quiz Generator
+              </h3>
+              <p className="text-[11px] font-medium text-[#8C93B0] dark:text-slate-400">
+                Masukkan topik apa saja dan Gemini 2.5 Flash akan meracik soal interaktif dalam hitungan detik.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Contoh: Sejarah Majapahit, Web Development, Astronomi..."
+              className="flex-1 px-4 py-3 bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold text-[#1E2238] dark:text-white placeholder-[#94A3B8] dark:placeholder-slate-500 focus:outline-none focus:border-[#6C5CE7] dark:focus:border-indigo-500 transition-all"
+            />
+
+            {/* Quick Difficulty Pills */}
+            <div className="flex items-center gap-1.5 p-1 bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 rounded-2xl">
+              {(['Easy', 'Medium', 'Hard'] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDifficulty(d)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    difficulty === d
+                      ? 'bg-[#6C5CE7] dark:bg-indigo-600 text-white shadow-sm'
+                      : 'text-[#646D89] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white'
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
             </div>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => router.push('/quiz-history')}
-              className="text-xs flex-shrink-0"
+            <button
+              onClick={() => handleStartAIQuiz()}
+              disabled={loading}
+              className="px-5 py-3 rounded-2xl btn-3d-brand text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 flex-shrink-0 disabled:opacity-50"
             >
-              Lihat Rank
-            </Button>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Meracik Soal AI...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Generate Kuis</span>
+                </>
+              )}
+            </button>
           </div>
-
-          {/* Podium 3 Teratas */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-1 sm:pt-2">
-            {topChampions.map((player, idx) => {
-              const rankStyles = [
-                'bg-[#FFF9E6] border-[#FFE7A3] text-[#B45309]',
-                'bg-[#F1F5F9] border-[#E2E8F0] text-[#475569]',
-                'bg-[#FFF1EC] border-[#FFD9CC] text-[#C2410C]',
-              ];
-              const medalIcons = [
-                <Crown key="crown" className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFB800] animate-bounce" />,
-                <Medal key="silver" className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400" />,
-                <Award key="bronze" className="w-5 h-5 sm:w-6 sm:h-6 text-[#D97706]" />,
-              ];
-
-              return (
-                <ScrollReveal
-                  key={player.name}
-                  direction="pop"
-                  delay={idx * 100}
-                >
-                  <div
-                    className={`p-4 sm:p-5 rounded-2xl border text-center relative flex flex-col items-center justify-center card-soft-interactive ${rankStyles[idx]}`}
-                  >
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white shadow-soft-sm flex items-center justify-center mb-2">
-                      {medalIcons[idx]}
-                    </div>
-                    <h4 className="font-display font-extrabold text-[#1E2238] text-sm sm:text-base mb-0.5">
-                      {player.name}
-                    </h4>
-                    <div className="text-[10px] sm:text-[11px] font-bold opacity-75 mb-2">{player.role}</div>
-                    <div className="px-3 py-1 rounded-full bg-white font-extrabold text-xs shadow-soft-sm text-[#1E2238]">
-                      {player.score}
-                    </div>
-                  </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
-        </section>
+        </div>
       </ScrollReveal>
+
+      {/* 4. Recent Quizzes & Live Database Activity */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-black text-lg text-[#1E2238] dark:text-white">
+            Recent Quizzes & Progress
+          </h2>
+          <span className="text-xs font-bold text-[#8C93B0] dark:text-slate-400">
+            {dbStats.total_plays} Total Kuis Dimainkan di Cloud
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {quickRecentQuizzes.map((q) => (
+            <div
+              key={q.name}
+              onClick={() => handleStartAIQuiz(q.name)}
+              className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-[#EAEFF8] dark:border-slate-800 shadow-sm hover:border-[#6C5CE7]/30 dark:hover:border-indigo-500/40 transition-all cursor-pointer flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${q.badgeColor}`}>
+                  {q.icon}
+                </div>
+                <div>
+                  <h4 className="font-display font-bold text-sm text-[#1E2238] dark:text-white">{q.name}</h4>
+                  <span className="text-[11px] text-[#8C93B0] dark:text-slate-400 font-medium">Klik untuk main</span>
+                </div>
+              </div>
+
+              <div className="w-8 h-8 rounded-full border-2 border-[#6C5CE7]/20 dark:border-indigo-500/30 flex items-center justify-center text-[10px] font-black text-[#6C5CE7] dark:text-indigo-400">
+                {q.progress}%
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Error Fallback & Rate Limit Modal */}
+      {errorModal.show && (
+        <ErrorFallbackModal
+          type={errorModal.type}
+          title={errorModal.title}
+          message={errorModal.message}
+          retryAfterSeconds={errorModal.retryAfterSeconds}
+          onRetry={() => {
+            setErrorModal((prev) => ({ ...prev, show: false }));
+            handleStartAIQuiz();
+          }}
+          onUseOfflineFallback={handleUseOfflineBank}
+          onClose={() => setErrorModal((prev) => ({ ...prev, show: false }))}
+        />
+      )}
     </main>
   );
 }

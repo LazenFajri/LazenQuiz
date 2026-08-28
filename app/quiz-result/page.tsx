@@ -17,7 +17,6 @@ import {
   Flame,
   Lightbulb,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { useQuizStorage } from '@/hooks/useQuizStorage';
 
@@ -42,7 +41,7 @@ interface QuizInfo {
 
 export default function QuizResultPage() {
   const router = useRouter();
-  const { bookmarks, toggleBookmark, isBookmarked } = useQuizStorage();
+  const { toggleBookmark, isBookmarked } = useQuizStorage();
   const [result, setResult] = useState<QuizResultData | null>(null);
   const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null);
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
@@ -83,12 +82,15 @@ export default function QuizResultPage() {
 
   if (!result || !quizInfo) {
     return (
-      <main className="py-20 text-center px-4">
-        <div className="bg-white p-6 sm:p-8 rounded-3xl max-w-sm mx-auto border border-[#ECEEF8] shadow-soft-sm">
-          <p className="text-[#8C93B0] mb-6 text-sm font-semibold">Belum ada hasil kuis yang tercatat.</p>
-          <Button variant="purple" onClick={() => router.push('/quiz-setup')}>
+      <main className="py-16 text-center px-4">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl max-w-sm mx-auto border border-[#EAEFF8] dark:border-slate-800 shadow-sm transition-colors">
+          <p className="text-[#8C93B0] dark:text-slate-400 mb-6 text-sm font-semibold">Belum ada hasil kuis yang tercatat.</p>
+          <button
+            onClick={() => router.push('/')}
+            className="w-full py-3 rounded-2xl btn-3d-brand text-white font-black text-xs"
+          >
             Mulai Kuis Baru
-          </Button>
+          </button>
         </div>
       </main>
     );
@@ -110,125 +112,117 @@ export default function QuizResultPage() {
   });
 
   return (
-    <main className="py-6 sm:py-12 max-w-3xl mx-auto space-y-6 sm:space-y-8">
-      {/* Back button */}
+    <main className="py-4 sm:py-6 max-w-2xl mx-auto space-y-5">
+      {/* Top Action Nav */}
       <ScrollReveal direction="down" delay={0}>
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => router.push('/')}
-            className="flex items-center gap-1.5 text-xs font-bold text-[#8C93B0] hover:text-[#1E2238] transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold text-[#8C93B0] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Kembali ke Explore</span>
+            <span>Kembali ke Beranda</span>
           </button>
 
-          <Button variant="outline" size="sm" onClick={handleShare} className="gap-1 text-xs">
-            {copied ? <Check className="w-3.5 h-3.5 text-[#10B981]" /> : <Share2 className="w-3.5 h-3.5" />}
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-[#EAEFF8] dark:border-slate-800 text-xs font-bold text-[#1E2238] dark:text-white shadow-sm"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-[#00B894]" /> : <Share2 className="w-3.5 h-3.5 text-[#6C5CE7]" />}
             <span>{copied ? 'Tersalin!' : 'Share Score'}</span>
-          </Button>
+          </button>
         </div>
       </ScrollReveal>
 
-      {/* Final Scoreboard Card */}
+      {/* Dribbble Style Result Score Card */}
       <ScrollReveal direction="pop" delay={100}>
-        <div className="bg-gradient-to-b from-[#6C5CE7] to-[#5842D8] rounded-3xl sm:rounded-4xl p-6 sm:p-10 text-white text-center shadow-soft-lg relative overflow-hidden">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center text-[#FFEAA7] mx-auto mb-3 sm:mb-4 shadow-soft-sm animate-pop-in">
-            <Trophy className="w-8 h-8 sm:w-10 sm:h-10 stroke-[2.5]" />
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 text-center border border-[#EAEFF8] dark:border-slate-800 shadow-md relative overflow-hidden space-y-4 transition-colors">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#FFB800] to-[#FFEAA7] text-amber-900 flex items-center justify-center mx-auto shadow-md animate-pop-in">
+            <Trophy className="w-8 h-8" />
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white font-extrabold text-[11px] sm:text-xs mb-2 sm:mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Final Scoreboard</span>
+          <div>
+            <span className="px-3 py-1 rounded-full bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-300 font-black text-[11px] uppercase tracking-wider inline-block mb-1.5">
+              Kuis Selesai!
+            </span>
+            <h1 className="font-display font-black text-3xl sm:text-4xl text-[#1E2238] dark:text-white">
+              {result.score} / {result.total} Jawaban Benar
+            </h1>
+            <p className="text-xs text-[#8C93B0] dark:text-slate-400 font-medium mt-1">
+              {pct >= 80 ? 'Hebat sekali! Kamu berhasil menguasai topik ini!' : 'Bagus! Terus tingkatkan wawasanmu!'}
+            </p>
           </div>
 
-          <h1 className="font-display font-black text-3xl sm:text-5xl mb-2 text-white">
-            {result.score} / {result.total}
-          </h1>
-
-          <p className="text-purple-100 text-xs sm:text-sm font-medium mb-5 sm:mb-6">
-            {pct >= 80 ? 'Master Level! Performa luar biasa!' : 'Bagus sekali! Terus latih wawasanmu!'}
-          </p>
-
-          {/* Reward Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
-            <div className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center gap-1.5 sm:gap-2">
-              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FF6B4A]" />
-              <span className="font-display font-black text-xs sm:text-sm">+{earnedXP} XP</span>
+          {/* Reward Badges */}
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="px-4 py-2 rounded-2xl bg-[#FFF3E8] dark:bg-rose-950/60 border border-[#FFE0CC] dark:border-rose-900 text-[#FF6B4A] dark:text-rose-300 font-display font-black text-xs flex items-center gap-1.5">
+              <Flame className="w-4 h-4 fill-current" />
+              <span>+{earnedXP} XP</span>
             </div>
 
-            <div className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center gap-1.5 sm:gap-2">
-              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FFB800]" />
-              <span className="font-display font-black text-xs sm:text-sm">{pct}% Accuracy</span>
+            <div className="px-4 py-2 rounded-2xl bg-[#F0EDFF] dark:bg-indigo-950/60 border border-[#DED7FC] dark:border-indigo-900 text-[#6C5CE7] dark:text-indigo-300 font-display font-black text-xs flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4" />
+              <span>{pct}% Akurasi</span>
             </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-3">
+            <button
+              onClick={() => router.push('/')}
+              className="w-full py-3 rounded-2xl btn-3d-coral text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Mainkan Kuis Lain</span>
+            </button>
+
+            <button
+              onClick={() => router.push('/quiz-history')}
+              className="w-full py-3 rounded-2xl bg-[#F0EDFF] dark:bg-slate-800 hover:bg-[#E4DEFF] text-[#6C5CE7] dark:text-indigo-300 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
+            >
+              <Trophy className="w-4 h-4 text-[#FFB800]" />
+              <span>Cek Leaderboard</span>
+            </button>
           </div>
         </div>
       </ScrollReveal>
 
-      {/* Action Buttons */}
-      <ScrollReveal direction="up" delay={200}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <Button
-            variant="coral"
-            size="lg"
-            onClick={() => router.push(`/quiz-setup?topic=${encodeURIComponent(quizInfo.topic)}`)}
-            className="w-full shadow-coral-glow justify-center text-xs sm:text-sm"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Mainkan Lagi Topik Ini</span>
-          </Button>
+      {/* Review Answers List */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-black text-lg text-[#1E2238] dark:text-white">
+            Review Jawaban
+          </h2>
 
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={() => router.push('/quiz-history')}
-            className="w-full justify-center text-xs sm:text-sm"
-          >
-            <Trophy className="w-4 h-4 text-[#FFB800]" />
-            <span>Lihat Leaderboard</span>
-          </Button>
-        </div>
-      </ScrollReveal>
-
-      {/* Review Answers */}
-      <div className="space-y-4">
-        <ScrollReveal direction="up" delay={250}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="font-display text-xl sm:text-2xl font-black text-[#1E2238]">
-              Review & Analisis Jawaban
-            </h2>
-
-            {/* Filter Pills with Horizontal Scroll on Mobile */}
-            <div className="flex items-center gap-1 p-1 bg-white border border-[#ECEEF8] rounded-2xl shadow-soft-sm overflow-x-auto">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeTab === 'all' ? 'bg-[#6C5CE7] text-white shadow-soft-sm' : 'text-[#64748B]'
-                }`}
-              >
-                Semua ({questions.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('correct')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeTab === 'correct' ? 'bg-[#10B981] text-white shadow-soft-sm' : 'text-[#64748B]'
-                }`}
-              >
-                Benar ({result.score})
-              </button>
-              <button
-                onClick={() => setActiveTab('incorrect')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  activeTab === 'incorrect' ? 'bg-[#EF4444] text-white shadow-soft-sm' : 'text-[#64748B]'
-                }`}
-              >
-                Salah ({result.total - result.score})
-              </button>
-            </div>
+          <div className="flex items-center gap-1 p-1 bg-white dark:bg-slate-900 border border-[#EAEFF8] dark:border-slate-800 rounded-2xl shadow-sm">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'all' ? 'bg-[#6C5CE7] text-white shadow-sm' : 'text-[#64748B] dark:text-slate-400'
+              }`}
+            >
+              Semua ({questions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('correct')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'correct' ? 'bg-[#00B894] text-white shadow-sm' : 'text-[#64748B] dark:text-slate-400'
+              }`}
+            >
+              Benar ({result.score})
+            </button>
+            <button
+              onClick={() => setActiveTab('incorrect')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'incorrect' ? 'bg-[#FF6B4A] text-white shadow-sm' : 'text-[#64748B] dark:text-slate-400'
+              }`}
+            >
+              Salah ({result.total - result.score})
+            </button>
           </div>
-        </ScrollReveal>
+        </div>
 
-        {/* Question Cards with Staggered ScrollReveal */}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {filteredQuestions.map((q, idx) => {
             const answer = result.answers.find((a) => a.questionId === q.id);
             const isCorrect = answer?.selected === q.correct;
@@ -236,84 +230,77 @@ export default function QuizResultPage() {
             const isBook = isBookmarked(q.id);
 
             return (
-              <ScrollReveal
+              <div
                 key={q.id}
-                direction="up"
-                delay={idx * 60}
+                className={`bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 transition-all shadow-sm ${
+                  isCorrect ? 'border-[#EAEFF8] dark:border-slate-800' : 'border-[#FFE0CC] dark:border-rose-950/60'
+                }`}
               >
-                <div
-                  className={`bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 transition-all shadow-soft-sm ${
-                    isCorrect ? 'border-[#E2E8F0]' : 'border-[#FEE2E2]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-2.5 sm:gap-3 flex-1">
-                      <div
-                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center font-black text-xs mt-0.5 flex-shrink-0 ${
-                          isCorrect ? 'bg-[#ECFDF5] text-[#10B981]' : 'bg-[#FEF2F2] text-[#EF4444]'
-                        }`}
-                      >
-                        {isCorrect ? '✓' : '✗'}
-                      </div>
-
-                      <div className="flex-1">
-                        <h3 className="font-display font-bold text-[#1E2238] text-sm sm:text-base mb-1">
-                          {q.question}
-                        </h3>
-
-                        <div className="text-[11px] sm:text-xs space-y-0.5">
-                          <div className="text-[#64748B]">
-                            Jawabanmu:{' '}
-                            <span
-                              className={`font-bold ${isCorrect ? 'text-[#10B981]' : 'text-[#EF4444]'}`}
-                            >
-                              {answer?.selected !== null && answer?.selected !== undefined
-                                ? `${String.fromCharCode(65 + answer.selected)}. ${q.options[answer.selected]}`
-                                : 'Tidak dijawab'}
-                            </span>
-                          </div>
-                          {!isCorrect && (
-                            <div className="text-[#059669] font-bold">
-                              Jawaban benar: {String.fromCharCode(65 + q.correct)}. {q.options[q.correct]}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs mt-0.5 flex-shrink-0 ${
+                        isCorrect ? 'bg-[#E0F9F3] dark:bg-teal-950/60 text-[#00B894] dark:text-teal-300' : 'bg-[#FFF0EB] dark:bg-rose-950/60 text-[#FF6B4A] dark:text-rose-300'
+                      }`}
+                    >
+                      {isCorrect ? '✓' : '✗'}
                     </div>
 
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button
-                        onClick={() => toggleBookmark(q.id)}
-                        className={`p-1.5 sm:p-2 rounded-xl border transition-all ${
-                          isBook
-                            ? 'bg-[#FFF9E6] border-[#FFE7A3] text-[#D97706]'
-                            : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8] hover:text-[#1E2238]'
-                        }`}
-                      >
-                        {isBook ? <BookmarkCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                      </button>
+                    <div className="flex-1">
+                      <h4 className="font-display font-bold text-sm text-[#1E2238] dark:text-white mb-1">
+                        {q.question}
+                      </h4>
 
-                      <button
-                        onClick={() => toggleItem(q.id)}
-                        className="p-1.5 sm:p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#1E2238]"
-                      >
-                        {isOpen ? <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                      </button>
+                      <div className="text-[11px] space-y-0.5">
+                        <div className="text-[#8C93B0] dark:text-slate-400">
+                          Jawabanmu:{' '}
+                          <span className={`font-bold ${isCorrect ? 'text-[#00B894]' : 'text-[#FF6B4A]'}`}>
+                            {answer?.selected !== null && answer?.selected !== undefined
+                              ? `${String.fromCharCode(65 + answer.selected)}. ${q.options[answer.selected]}`
+                              : 'Tidak dijawab'}
+                          </span>
+                        </div>
+                        {!isCorrect && (
+                          <div className="text-[#00B894] font-bold">
+                            Jawaban benar: {String.fromCharCode(65 + q.correct)}. {q.options[q.correct]}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {isOpen && (
-                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[#F1F5F9] text-xs sm:text-sm text-[#4834D4] bg-[#F0EDFF] p-3.5 sm:p-4 rounded-2xl flex items-start gap-2">
-                      <Lightbulb className="w-4 h-4 text-[#6C5CE7] flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-extrabold block mb-1">Pembahasan:</span>
-                        {q.explanation ||
-                          `Jawaban yang benar adalah opsi ${String.fromCharCode(65 + q.correct)}.`}
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => toggleBookmark(q.id)}
+                      className={`p-2 rounded-xl border transition-all ${
+                        isBook
+                          ? 'bg-[#FFF9E6] dark:bg-amber-950/60 border-[#FFE7A3] text-[#FFB800]'
+                          : 'bg-[#F8FAFC] dark:bg-slate-800 border-[#EAEFF8] dark:border-slate-700 text-[#94A3B8]'
+                      }`}
+                    >
+                      {isBook ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+                    </button>
+
+                    <button
+                      onClick={() => toggleItem(q.id)}
+                      className="p-2 rounded-xl bg-[#F8FAFC] dark:bg-slate-800 border border-[#EAEFF8] dark:border-slate-700 text-[#64748B] dark:text-slate-300"
+                    >
+                      {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
-              </ScrollReveal>
+
+                {isOpen && (
+                  <div className="mt-3 pt-3 border-t border-[#F1F5F9] dark:border-slate-800 text-xs text-[#4834D4] dark:text-indigo-300 bg-[#F0EDFF] dark:bg-indigo-950/40 p-3 rounded-xl flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 text-[#6C5CE7] dark:text-indigo-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-extrabold block text-[#6C5CE7] dark:text-indigo-400 mb-0.5">Pembahasan:</span>
+                      {q.explanation ||
+                        `Jawaban yang benar adalah opsi ${String.fromCharCode(65 + q.correct)}.`}
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

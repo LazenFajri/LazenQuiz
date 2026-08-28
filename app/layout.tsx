@@ -3,6 +3,7 @@ import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -25,9 +26,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LazenQuiz - Fun & Engaging Trivia Game Quiz',
+  title: 'LazenQuiz - Dribbble Aesthetic AI Trivia & 1v1 PvP Arena',
   description:
-    'Play smart quizzes, compete on the leaderboard, earn medals, and level up your knowledge in a sleek modern design.',
+    'Play smart quizzes, compete live on real Neon DB leaderboards, and battle friends in 1v1 PvP rooms.',
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({
@@ -39,16 +45,19 @@ export default function RootLayout({
     <html
       lang="id"
       className={`${outfit.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
     >
-      <body className="font-sans bg-[#F4F6FC] text-[#1E2238] min-h-screen antialiased selection:bg-[#6C5CE7]/20 selection:text-[#6C5CE7]">
-        <SmoothScrollProvider>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <div className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6">
-              {children}
+      <body className="font-sans bg-[#F0F4FA] dark:bg-slate-950 text-[#1E2238] dark:text-slate-100 min-h-screen antialiased selection:bg-[#6C5CE7]/20 selection:text-[#6C5CE7] transition-colors duration-200">
+        <ThemeProvider>
+          <SmoothScrollProvider>
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <div className="flex-1 max-w-5xl w-full mx-auto px-3.5 sm:px-6">
+                {children}
+              </div>
             </div>
-          </div>
-        </SmoothScrollProvider>
+          </SmoothScrollProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

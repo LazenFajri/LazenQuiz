@@ -16,23 +16,45 @@ export default function QuizPlayPage() {
 
   useEffect(() => {
     if (ready && !activeQuiz) {
-      router.push('/quiz-setup');
+      router.push('/');
     }
   }, [ready, activeQuiz, router]);
 
-  const handleComplete = (results: any) => {
+  const handleComplete = async (results: any) => {
     if (!activeQuiz) return;
+    const durationSeconds = results.durationSeconds || 0;
     const record: StoredQuiz = {
       ...activeQuiz,
       score: results.score,
       total: results.total,
       answers: results.answers,
-      durationSeconds: results.durationSeconds || 0,
+      durationSeconds,
       timestamp: new Date().toISOString(),
     };
+
+    // 1. Save full detailed attempt in client-side LocalStorage for zero-cloud review
     addToHistory(record);
     localStorage.setItem('lastQuizResult', JSON.stringify(record));
     localStorage.setItem('lastQuizInfo', JSON.stringify(activeQuiz));
+
+    // 2. Non-blocking summary save to Neon DB (saving only aggregated row to conserve storage)
+    try {
+      fetch('/api/quiz/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: activeQuiz.id || `sess_${Date.now()}`,
+          topic: activeQuiz.topic,
+          difficulty: activeQuiz.difficulty,
+          score: results.score,
+          totalQuestions: results.total,
+          timeSpentSeconds: durationSeconds,
+        }),
+      }).catch((err) => console.error('Neon DB background save error:', err));
+    } catch (e) {
+      console.error(e);
+    }
+
     clearActiveQuiz();
     router.push('/quiz-result');
   };

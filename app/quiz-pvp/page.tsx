@@ -25,9 +25,13 @@ import {
   Loader2,
   ChevronRight,
   AlertTriangle,
+  Lock,
+  UserPlus,
+  LogIn,
 } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ErrorFallbackModal } from '@/components/ui/ErrorFallbackModal';
+import { LoginModal } from '@/components/auth/LoginModal';
 import { MOCK_QUESTION_BANK, MockQuestion } from '@/lib/mockData';
 
 interface Question {
@@ -41,6 +45,10 @@ interface Question {
 export default function PvPBattlePage() {
   const router = useRouter();
   const [mode, setMode] = useState<'selection' | 'waiting_room' | 'battle' | 'result'>('selection');
+
+  // User Auth State for PvP
+  const [user, setUser] = useState<{ username: string; avatar: string } | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const [playerName, setPlayerName] = useState('Pemain 1');
   const [roomCode, setRoomCode] = useState('');
@@ -65,6 +73,17 @@ export default function PvPBattlePage() {
   // Custom Toast state
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('lazenUser');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        setUser(u);
+        setPlayerName(u.username);
+      }
+    } catch {}
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
@@ -72,6 +91,11 @@ export default function PvPBattlePage() {
 
   // 1. Create Real 1v1 Room with offline bank fallback
   const handleCreateRoom = async () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     setLoading(true);
     try {
       let qList: Question[] = [];
@@ -112,7 +136,7 @@ export default function PvPBattlePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'create',
-          playerName: playerName.trim() || 'Player 1',
+          playerName: user.username || playerName || 'Player 1',
           topic: 'Duel 1v1 Teman Asli',
           questions: qList,
         }),
@@ -137,6 +161,11 @@ export default function PvPBattlePage() {
 
   // 2. Join Real 1v1 Room with Code
   const handleJoinRoom = async () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     if (!joinCodeInput.trim()) {
       showToast('Ketik 4-digit room code terlebih dahulu.');
       return;
@@ -149,7 +178,7 @@ export default function PvPBattlePage() {
         body: JSON.stringify({
           action: 'join',
           roomCode: joinCodeInput.trim().toUpperCase(),
-          playerName: playerName.trim() || 'Player 2',
+          playerName: user.username || playerName || 'Player 2',
         }),
       });
 
@@ -171,6 +200,11 @@ export default function PvPBattlePage() {
 
   // 3. Quick Match with AI
   const handleQuickMatchAI = async () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     setLoading(true);
     setOppName('Nicola Tesla (AI)');
     try {
@@ -324,61 +358,106 @@ export default function PvPBattlePage() {
             <h1 className="font-display font-black text-2xl sm:text-3xl text-[#1E2238] dark:text-white mb-1.5">
               1v1 PvP Battle Arena
             </h1>
-            <p className="text-xs sm:text-sm text-[#8C93B0] dark:text-slate-400 max-w-sm mx-auto mb-6 font-medium">
-              Tantang teman aslimu dengan Room Code atau main cepat lawan Bot AI master trivia.
+            <p className="text-xs sm:text-sm text-[#8C93B0] dark:text-slate-400 max-w-sm mx-auto mb-5 font-medium">
+              Tantang teman aslimu dengan Room Code atau duel cepat lawan Bot AI master trivia.
             </p>
 
-            <div className="space-y-3">
-              {/* Option A: Create Room with Friend */}
-              <button
-                onClick={handleCreateRoom}
-                disabled={loading}
-                className="w-full p-4 rounded-2xl bg-gradient-to-r from-[#6C5CE7] to-[#8C7AE6] text-white font-black text-sm flex items-center justify-between shadow-md shadow-[#6C5CE7]/25 hover:scale-[1.01] transition-all disabled:opacity-50"
-              >
-                <div className="flex items-center gap-3 text-left">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Users2 className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <span className="block font-display text-base leading-tight">Buat Room Duel (Lawan Teman)</span>
-                    <span className="text-[11px] text-white/80 font-normal">Dapatkan 4-digit code & bagikan ke temanmu</span>
-                  </div>
+            {/* If Not Logged In / Guest: Show Required Sign Up / Sign In Banner */}
+            {!user ? (
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-[#F0EDFF] to-[#FFF3E8] dark:from-slate-950 dark:to-slate-900 border-2 border-dashed border-[#6C5CE7]/40 dark:border-indigo-500/40 text-center space-y-3 mb-2">
+                <div className="w-10 h-10 rounded-2xl bg-[#6C5CE7] text-white flex items-center justify-center mx-auto shadow-sm">
+                  <Lock className="w-5 h-5" />
                 </div>
-                <ArrowRight className="w-5 h-5" />
-              </button>
+                <div>
+                  <h3 className="font-display font-black text-base text-[#1E2238] dark:text-white">
+                    Mode PvP Khusus Akun Terdaftar
+                  </h3>
+                  <p className="text-xs text-[#8C93B0] dark:text-slate-400 mt-0.5 max-w-xs mx-auto">
+                    Daftar akun (Sign Up) atau Masuk terlebih dahulu untuk menikmati duel live bersama teman & klaim skor di Leaderboard!
+                  </p>
+                </div>
 
-              {/* Option B: Join Room with Code */}
-              <div className="p-4 rounded-2xl bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 flex flex-col sm:flex-row items-center gap-2.5">
-                <input
-                  type="text"
-                  value={joinCodeInput}
-                  onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-                  maxLength={4}
-                  placeholder="Ketik 4-Digit Room Code..."
-                  className="w-full sm:flex-1 px-4 py-2.5 bg-white dark:bg-slate-900 border border-[#EAEFF8] dark:border-slate-800 rounded-xl text-center sm:text-left font-display font-black tracking-widest text-[#1E2238] dark:text-white focus:outline-none focus:border-[#6C5CE7] uppercase text-sm"
-                />
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <button
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="px-5 py-2.5 rounded-2xl btn-3d-brand text-white font-black text-xs flex items-center gap-1.5 shadow-sm"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Daftar / Masuk Sekarang</span>
+                  </button>
+
+                  <button
+                    onClick={() => router.push('/')}
+                    className="px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 text-[#646D89] dark:text-slate-300 font-bold text-xs hover:bg-[#F4F6FC]"
+                  >
+                    Kuis Biasa (Tanpa Login)
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Logged in User Pill */}
+                <div className="p-2.5 rounded-2xl bg-[#F0EDFF] dark:bg-indigo-950/40 border border-[#6C5CE7]/30 flex items-center justify-between text-xs mb-2">
+                  <span className="font-bold text-[#6C5CE7] dark:text-indigo-300 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    <span>Login sebagai: <strong>{user.username}</strong></span>
+                  </span>
+                  <span className="text-[10px] bg-[#00B894] text-white font-black px-2 py-0.5 rounded-full">
+                    PvP Ready
+                  </span>
+                </div>
+
+                {/* Option A: Create Room with Friend */}
                 <button
-                  onClick={handleJoinRoom}
-                  disabled={!joinCodeInput.trim() || loading}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl btn-3d-brand text-white font-black text-xs disabled:opacity-40"
+                  onClick={handleCreateRoom}
+                  disabled={loading}
+                  className="w-full p-4 rounded-2xl bg-gradient-to-r from-[#6C5CE7] to-[#8C7AE6] text-white font-black text-sm flex items-center justify-between shadow-md shadow-[#6C5CE7]/25 hover:scale-[1.01] transition-all disabled:opacity-50"
                 >
-                  Join Room
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Users2 className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <span className="block font-display text-base leading-tight">Buat Room Duel (Lawan Teman)</span>
+                      <span className="text-[11px] text-white/80 font-normal">Dapatkan 4-digit code & bagikan ke temanmu</span>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+
+                {/* Option B: Join Room with Code */}
+                <div className="p-4 rounded-2xl bg-[#F8FAFD] dark:bg-slate-950 border-2 border-[#EAEFF8] dark:border-slate-800 flex flex-col sm:flex-row items-center gap-2.5">
+                  <input
+                    type="text"
+                    value={joinCodeInput}
+                    onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
+                    maxLength={4}
+                    placeholder="Ketik 4-Digit Room Code..."
+                    className="w-full sm:flex-1 px-4 py-2.5 bg-white dark:bg-slate-900 border border-[#EAEFF8] dark:border-slate-800 rounded-xl text-center sm:text-left font-display font-black tracking-widest text-[#1E2238] dark:text-white focus:outline-none focus:border-[#6C5CE7] uppercase text-sm"
+                  />
+                  <button
+                    onClick={handleJoinRoom}
+                    disabled={!joinCodeInput.trim() || loading}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl btn-3d-brand text-white font-black text-xs disabled:opacity-40"
+                  >
+                    Join Room
+                  </button>
+                </div>
+
+                {/* Option C: Quick AI Match */}
+                <button
+                  onClick={handleQuickMatchAI}
+                  disabled={loading}
+                  className="w-full p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-[#EAEFF8] dark:border-slate-800 text-[#1E2238] dark:text-white hover:border-[#FF6B4A] dark:hover:border-rose-500 font-bold text-xs flex items-center justify-between transition-all"
+                >
+                  <span className="flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-[#FF6B4A] dark:text-rose-400" />
+                    <span>Quick Match Lawan Bot AI (Instant Play)</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-[#8C93B0] dark:text-slate-400" />
                 </button>
               </div>
-
-              {/* Option C: Quick AI Match */}
-              <button
-                onClick={handleQuickMatchAI}
-                disabled={loading}
-                className="w-full p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-[#EAEFF8] dark:border-slate-800 text-[#1E2238] dark:text-white hover:border-[#FF6B4A] dark:hover:border-rose-500 font-bold text-xs flex items-center justify-between transition-all"
-              >
-                <span className="flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-[#FF6B4A] dark:text-rose-400" />
-                  <span>Quick Match Lawan Bot AI (Instant Play)</span>
-                </span>
-                <ChevronRight className="w-4 h-4 text-[#8C93B0] dark:text-slate-400" />
-              </button>
-            </div>
+            )}
           </div>
         </ScrollReveal>
       )}
@@ -478,7 +557,9 @@ export default function PvPBattlePage() {
                   <User className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-[#8C93B0] dark:text-slate-400 block">Kamu</span>
+                  <span className="text-[10px] font-bold text-[#8C93B0] dark:text-slate-400 block truncate max-w-[70px]">
+                    {user?.username || 'Kamu'}
+                  </span>
                   <span className="font-display font-black text-sm text-[#6C5CE7] dark:text-indigo-400">{myScore} pts</span>
                 </div>
               </div>
@@ -570,6 +651,18 @@ export default function PvPBattlePage() {
           )}
         </>
       )}
+
+      {/* Sign Up / Login Modal for PvP */}
+      <LoginModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={(u) => {
+          setUser(u);
+          setPlayerName(u.username);
+          setIsAuthModalOpen(false);
+          showToast(`Selamat datang, ${u.username}! Mode PvP sekarang terbuka.`);
+        }}
+      />
     </main>
   );
 }

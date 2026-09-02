@@ -52,7 +52,7 @@ export default function RootLayout({
           <SmoothScrollProvider>
             <div className="flex flex-col min-h-screen">
               <Navbar />
-              <div className="flex-1 max-w-5xl w-full mx-auto px-3.5 sm:px-6">
+              <div className="flex-1 max-w-5xl w-full mx-auto px-3.5 sm:px-6 pb-24 md:pb-6">
                 {children}
               </div>
             </div>

@@ -92,7 +92,7 @@ export function HomePage() {
     try {
       const savedUser = localStorage.getItem('lazenUser');
       if (savedUser) setCurrentUser(JSON.parse(savedUser));
-    } catch {}
+    } catch { }
   }, []);
 
   // Error Fallback Modal State
@@ -116,7 +116,7 @@ export function HomePage() {
           setDbStats(json.stats);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleStartAIQuiz = async (customTopic?: string) => {
@@ -300,7 +300,7 @@ export function HomePage() {
                 Custom AI Quiz Generator
               </h3>
               <p className="text-[11px] font-medium text-[#8C93B0] dark:text-slate-400">
-                Masukkan topik apa saja dan Gemini 2.5 Flash akan meracik soal interaktif dalam hitungan detik.
+                Masukkan topik apa saja dan Gemini 3.5 Flash akan meracik soal interaktif dalam hitungan detik.
               </p>
             </div>
           </div>
@@ -322,11 +322,10 @@ export function HomePage() {
                     key={d}
                     type="button"
                     onClick={() => setDifficulty(d)}
-                    className={`flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      difficulty === d
+                    className={`flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${difficulty === d
                         ? 'bg-[#6C5CE7] dark:bg-indigo-600 text-white shadow-sm'
                         : 'text-[#646D89] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     {d}
                   </button>

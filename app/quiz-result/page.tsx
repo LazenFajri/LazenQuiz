@@ -185,6 +185,12 @@ export default function QuizResultPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [claimedXp, setClaimedXp] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setClaimedXp(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!ready) return (
     <main className="py-4 sm:py-6 max-w-2xl mx-auto space-y-5 animate-fade-in">
       {/* Skeleton for score card */}
@@ -251,12 +257,6 @@ export default function QuizResultPage() {
     if (activeTab === 'bookmarked') return bookmarked;
     return true;
   });
-
-  const [claimedXp, setClaimedXp] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setClaimedXp(true), 4000);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <main className="py-4 sm:py-6 max-w-2xl mx-auto space-y-5">

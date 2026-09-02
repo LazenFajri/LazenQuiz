@@ -12,14 +12,14 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  default: 'btn-3d-purple',
-  purple: 'btn-3d-purple',
+  default: 'btn-3d-brand',
+  purple: 'btn-3d-brand',
   coral: 'btn-3d-coral',
   destructive: 'bg-[#EF4444] hover:bg-[#DC2626] text-white shadow-md font-bold',
-  secondary: 'bg-[#F0EDFF] hover:bg-[#E3DCFF] text-[#6C5CE7] font-bold',
+  secondary: 'bg-[#F0EDFF] hover:bg-[#E3DCFF] text-[#6C5CE7] font-bold dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/60',
   outline:
-    'border-2 border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] hover:border-[#CBD5E1] text-[#475569] font-bold shadow-sm',
-  ghost: 'hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#1E293B] font-semibold',
+    'border-2 border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] hover:border-[#CBD5E1] text-[#475569] font-bold shadow-sm dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600',
+  ghost: 'hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#1E293B] font-semibold dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

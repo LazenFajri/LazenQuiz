@@ -47,17 +47,124 @@ export default function QuizResultPage() {
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<'all' | 'correct' | 'incorrect' | 'bookmarked'>('all');
   const [copied, setCopied] = useState(false);
+  const [searchId, setSearchId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setReady(true);
     try {
-      const savedResult = localStorage.getItem('lastQuizResult');
-      const savedInfo = localStorage.getItem('lastQuizInfo');
-      if (savedResult) setResult(JSON.parse(savedResult));
-      if (savedInfo) setQuizInfo(JSON.parse(savedInfo));
-    } catch {
-      // ignore
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryId = urlParams.get('id');
+      if (queryId) setSearchId(queryId);
+
+      let foundResult: QuizResultData | null = null;
+      let foundInfo: QuizInfo | null = null;
+
+      // 1. Try to load specific record by ID from history if query param is present
+      const rawStored = localStorage.getItem('lazen-quiz');
+      if (queryId && rawStored) {
+        const parsedStored = JSON.parse(rawStored);
+        const targetQuiz = parsedStored.history?.find((h: any) => h.id === queryId);
+        if (targetQuiz) {
+          const questions = targetQuiz.questions || [];
+          const answers = targetQuiz.answers || questions.map((q: any, idx: number) => ({
+            questionId: q.id || idx + 1,
+            selected: q.correct,
+            correct: q.correct,
+          }));
+
+          foundResult = {
+            score: targetQuiz.score ?? questions.length,
+            total: targetQuiz.total ?? questions.length,
+            durationSeconds: targetQuiz.durationSeconds,
+            answers,
+          };
+          foundInfo = {
+            topic: targetQuiz.topic || 'Kuis LazenQuiz',
+            difficulty: targetQuiz.difficulty || 'Medium',
+            questions: questions.map((q: any, idx: number) => ({
+              id: q.id || idx + 1,
+              question: q.question,
+              options: q.options || [],
+              correct: q.correct ?? 0,
+              explanation: q.explanation,
+            })),
+          };
+        }
+      }
+
+      // 2. If not found by queryId, try lastQuizResult & lastQuizInfo
+      if (!foundResult || !foundInfo) {
+        const savedResult = localStorage.getItem('lastQuizResult');
+        const savedInfo = localStorage.getItem('lastQuizInfo');
+        if (savedResult) {
+          const parsedRes = JSON.parse(savedResult);
+          const parsedInf = savedInfo ? JSON.parse(savedInfo) : parsedRes;
+
+          const questions = parsedInf.questions || parsedRes.questions || [];
+          const answers = parsedRes.answers || questions.map((q: any, idx: number) => ({
+            questionId: q.id || idx + 1,
+            selected: q.correct,
+            correct: q.correct,
+          }));
+
+          foundResult = {
+            score: parsedRes.score ?? questions.length,
+            total: parsedRes.total ?? questions.length,
+            durationSeconds: parsedRes.durationSeconds,
+            answers,
+          };
+
+          foundInfo = {
+            topic: parsedInf.topic || parsedRes.topic || 'Kuis LazenQuiz',
+            difficulty: parsedInf.difficulty || parsedRes.difficulty || 'Medium',
+            questions: questions.map((q: any, idx: number) => ({
+              id: q.id || idx + 1,
+              question: q.question,
+              options: q.options || [],
+              correct: q.correct ?? 0,
+              explanation: q.explanation,
+            })),
+          };
+        }
+      }
+
+      // 3. Last fallback: pick latest record from history if present
+      if ((!foundResult || !foundInfo) && rawStored) {
+        const parsedStored = JSON.parse(rawStored);
+        if (Array.isArray(parsedStored.history) && parsedStored.history.length > 0) {
+          const latest = parsedStored.history[parsedStored.history.length - 1];
+          const questions = latest.questions || [];
+          const answers = latest.answers || questions.map((q: any, idx: number) => ({
+            questionId: q.id || idx + 1,
+            selected: q.correct,
+            correct: q.correct,
+          }));
+
+          foundResult = {
+            score: latest.score ?? questions.length,
+            total: latest.total ?? questions.length,
+            durationSeconds: latest.durationSeconds,
+            answers,
+          };
+          foundInfo = {
+            topic: latest.topic || 'Kuis LazenQuiz',
+            difficulty: latest.difficulty || 'Medium',
+            questions: questions.map((q: any, idx: number) => ({
+              id: q.id || idx + 1,
+              question: q.question,
+              options: q.options || [],
+              correct: q.correct ?? 0,
+              explanation: q.explanation,
+            })),
+          };
+        }
+      }
+
+      if (foundResult) setResult(foundResult);
+      if (foundInfo) setQuizInfo(foundInfo);
+    } catch (e) {
+      console.error('Failed to load quiz results:', e);
     }
   }, []);
 
@@ -78,7 +185,41 @@ export default function QuizResultPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!ready) return null;
+  if (!ready) return (
+    <main className="py-4 sm:py-6 max-w-2xl mx-auto space-y-5 animate-fade-in">
+      {/* Skeleton for score card */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-[#EAEFF8] dark:border-slate-800 space-y-4">
+        <div className="flex justify-center"><div className="w-16 h-16 rounded-3xl skeleton" /></div>
+        <div className="space-y-2 flex flex-col items-center">
+          <div className="w-28 h-5 skeleton" />
+          <div className="w-48 h-8 skeleton" />
+          <div className="w-56 h-4 skeleton" />
+        </div>
+        <div className="flex justify-center gap-3 pt-2">
+          <div className="w-24 h-9 skeleton rounded-2xl" />
+          <div className="w-28 h-9 skeleton rounded-2xl" />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 pt-2">
+          <div className="h-11 skeleton rounded-2xl" />
+          <div className="h-11 skeleton rounded-2xl" />
+        </div>
+      </div>
+      {/* Skeleton for review list */}
+      <div className="space-y-2.5">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-[#EAEFF8] dark:border-slate-800">
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-xl skeleton flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 skeleton w-3/4" />
+                <div className="h-3 skeleton w-1/2" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
 
   if (!result || !quizInfo) {
     return (

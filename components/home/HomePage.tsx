@@ -86,6 +86,14 @@ export function HomePage() {
   const [questionCount, setQuestionCount] = useState(5);
   const [loading, setLoading] = useState(false);
   const [dbStats, setDbStats] = useState({ total_plays: 0, total_points: 0 });
+  const [currentUser, setCurrentUser] = useState<{ username: string; avatar: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('lazenUser');
+      if (savedUser) setCurrentUser(JSON.parse(savedUser));
+    } catch {}
+  }, []);
 
   // Error Fallback Modal State
   const [errorModal, setErrorModal] = useState<{
@@ -181,6 +189,9 @@ export function HomePage() {
     router.push('/quiz-play');
   };
 
+  const totalUserXP = history.reduce((acc, h) => acc + (h.score || 0) * 100, 0);
+  const userRankTitle = totalUserXP >= 2000 ? 'Master League' : totalUserXP >= 1000 ? 'Diamond Tier' : totalUserXP >= 400 ? 'Gold Tier' : 'Novice Tier';
+
   return (
     <main className="py-4 sm:py-6 space-y-5 sm:space-y-6">
       {/* 1. Profile Header & Level Progress Banner */}
@@ -192,9 +203,14 @@ export function HomePage() {
             </div>
             <div>
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-xs font-bold text-[#8C93B0] dark:text-slate-400">Hi, Trivia Master!</span>
+                <span className="text-xs font-bold text-[#8C93B0] dark:text-slate-400">
+                  Hi, {currentUser?.username || 'Trivia Master'}!
+                </span>
                 <span className="px-2 py-0.5 rounded-full bg-[#FFF3E8] dark:bg-rose-950/60 text-[#FF6B4A] dark:text-rose-300 text-[10px] font-black uppercase">
-                  Gold Tier
+                  {userRankTitle}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-300 text-[10px] font-black">
+                  {totalUserXP} XP
                 </span>
               </div>
               <h1 className="font-display font-black text-xl sm:text-2xl text-[#1E2238] dark:text-white tracking-tight">

@@ -313,11 +313,13 @@ export default function QuizHistoryPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
-                      localStorage.setItem('lastQuizResult', JSON.stringify(item));
-                      localStorage.setItem('lastQuizInfo', JSON.stringify(item));
-                      router.push('/quiz-result');
+                      try {
+                        localStorage.setItem('lastQuizResult', JSON.stringify(item));
+                        localStorage.setItem('lastQuizInfo', JSON.stringify(item));
+                      } catch {}
+                      router.push(item.id ? `/quiz-result?id=${encodeURIComponent(item.id)}` : '/quiz-result');
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-400 text-xs font-bold hover:bg-[#E4DEFF] dark:hover:bg-indigo-900/60"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-300 text-xs font-extrabold hover:bg-[#E4DEFF] dark:hover:bg-indigo-900/60 transition-all shadow-sm"
                   >
                     Detail Review
                   </button>

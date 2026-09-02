@@ -44,20 +44,20 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop blur overlay */}
       <div
-        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
         onClick={onClose}
       />
 
       {/* Modal Dialog Content */}
-      <div className="relative z-10 w-full max-w-md glass-panel-elevated rounded-3xl p-6 md:p-8 shadow-2xl border border-white/15 animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-[#EAEFF8] dark:border-slate-800 animate-pop-in">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h3 className="font-display text-xl font-bold text-white tracking-tight">{title}</h3>
-            {description && <p className="text-sm text-slate-400 mt-1">{description}</p>}
+            <h3 className="font-display text-xl font-bold text-[#1E2238] dark:text-white tracking-tight">{title}</h3>
+            {description && <p className="text-sm text-[#8C93B0] dark:text-slate-400 mt-1">{description}</p>}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+            className="p-1.5 text-[#8C93B0] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white rounded-xl hover:bg-[#F4F6FC] dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

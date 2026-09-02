@@ -21,7 +21,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         className={cn(
           'rounded-2xl border transition-all duration-300',
           glass
-            ? 'glass-panel'
+            ? 'bg-white dark:bg-slate-900 border-[#EAEFF8] dark:border-slate-800 shadow-sm'
             : 'border-slate-800/80 bg-slate-900/60 text-slate-100 shadow-xl',
           glowClasses[glow],
           className
@@ -44,7 +44,7 @@ const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('font-display font-bold text-xl md:text-2xl leading-tight text-white tracking-tight', className)}
+      className={cn('font-display font-bold text-xl md:text-2xl leading-tight text-[#1E2238] dark:text-white tracking-tight', className)}
       {...props}
     />
   )
@@ -53,7 +53,7 @@ CardTitle.displayName = 'CardTitle';
 
 const CardDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('text-sm text-slate-400 leading-relaxed', className)} {...props} />
+    <div ref={ref} className={cn('text-sm text-[#8C93B0] dark:text-slate-400 leading-relaxed', className)} {...props} />
   )
 );
 CardDescription.displayName = 'CardDescription';

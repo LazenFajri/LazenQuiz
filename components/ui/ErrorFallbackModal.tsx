@@ -41,12 +41,12 @@ export function ErrorFallbackModal({
   const isRateLimit = type === 'rate_limit';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in">
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EAEFF8] shadow-2xl max-w-md w-full relative animate-pop-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-[#EAEFF8] dark:border-slate-800 shadow-2xl max-w-md w-full relative animate-pop-in">
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-xl text-[#8C93B0] hover:text-[#1E2238] hover:bg-[#F4F6FC] transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-xl text-[#8C93B0] dark:text-slate-400 hover:text-[#1E2238] dark:hover:text-white hover:bg-[#F4F6FC] dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -57,8 +57,8 @@ export function ErrorFallbackModal({
           <div
             className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ${
               isRateLimit
-                ? 'bg-[#FFF3E8] text-[#FF6B4A]'
-                : 'bg-rose-50 text-rose-500'
+                ? 'bg-[#FFF3E8] dark:bg-rose-950/60 text-[#FF6B4A]'
+                : 'bg-rose-50 dark:bg-rose-950/60 text-rose-500'
             }`}
           >
             {isRateLimit ? (
@@ -72,20 +72,20 @@ export function ErrorFallbackModal({
             <span
               className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                 isRateLimit
-                  ? 'bg-[#FFF3E8] text-[#FF6B4A]'
-                  : 'bg-rose-50 text-rose-500'
+                  ? 'bg-[#FFF3E8] dark:bg-rose-950/60 text-[#FF6B4A]'
+                  : 'bg-rose-50 dark:bg-rose-950/60 text-rose-500'
               }`}
             >
               {isRateLimit ? 'Anti-Spam Shield' : 'Layanan Terkendala'}
             </span>
-            <h3 className="font-display font-black text-lg text-[#1E2238] leading-tight mt-0.5">
+            <h3 className="font-display font-black text-lg text-[#1E2238] dark:text-white leading-tight mt-0.5">
               {title || (isRateLimit ? 'Santai Dulu! Server Sedang Sibuk ⚡' : 'Layanan Istirahat Sebentar')}
             </h3>
           </div>
         </div>
 
         {/* Message */}
-        <p className="text-xs text-[#646D89] leading-relaxed mb-4">
+        <p className="text-xs text-[#646D89] dark:text-slate-400 leading-relaxed mb-4">
           {message ||
             (isRateLimit
               ? 'Kamu telah melakukan generate kuis cukup banyak dalam waktu singkat untuk menjaga kuota AI tetap stabil.'
@@ -94,7 +94,7 @@ export function ErrorFallbackModal({
 
         {/* Countdown Pill for Rate Limit */}
         {isRateLimit && countdown > 0 && (
-          <div className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#F0EDFF] text-[#6C5CE7] font-display font-black text-xs mb-4">
+          <div className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] dark:text-indigo-300 font-display font-black text-xs mb-4">
             <Clock className="w-4 h-4 animate-spin" />
             <span>Coba lagi dalam {countdown} detik</span>
           </div>
@@ -116,7 +116,7 @@ export function ErrorFallbackModal({
             <button
               onClick={onRetry}
               disabled={isRateLimit && countdown > 0}
-              className="w-full py-2.5 rounded-2xl bg-[#F4F6FC] hover:bg-[#ECEEF8] disabled:opacity-40 text-[#1E2238] font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+              className="w-full py-2.5 rounded-2xl bg-[#F4F6FC] dark:bg-slate-800 hover:bg-[#ECEEF8] dark:hover:bg-slate-700 disabled:opacity-40 text-[#1E2238] dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>{isRateLimit && countdown > 0 ? `Menunggu (${countdown}s)` : 'Coba Lagi'}</span>

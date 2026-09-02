@@ -7,12 +7,12 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const badgeVariants: Record<NonNullable<BadgeProps['variant']>, string> = {
-  default: 'bg-[#F0EDFF] text-[#6C5CE7] border-[#DED7FC]',
-  purple: 'bg-[#6C5CE7]/10 text-[#6C5CE7] border-[#6C5CE7]/20',
-  coral: 'bg-[#FF6B4A]/10 text-[#FF6B4A] border-[#FF6B4A]/20',
-  amber: 'bg-[#FFF3D6] text-[#D97706] border-[#FDE68A]',
-  emerald: 'bg-[#E6FAF0] text-[#059669] border-[#A7F3D0]',
-  outline: 'border-[#E2E8F0] text-[#64748B] bg-white',
+  default: 'bg-[#F0EDFF] text-[#6C5CE7] border-[#DED7FC] dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/50',
+  purple: 'bg-[#6C5CE7]/10 text-[#6C5CE7] border-[#6C5CE7]/20 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/40',
+  coral: 'bg-[#FF6B4A]/10 text-[#FF6B4A] border-[#FF6B4A]/20 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/40',
+  amber: 'bg-[#FFF3D6] text-[#D97706] border-[#FDE68A] dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/40',
+  emerald: 'bg-[#E6FAF0] text-[#059669] border-[#A7F3D0] dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/40',
+  outline: 'border-[#E2E8F0] text-[#64748B] bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300',
 };
 
 const badgeSizes: Record<NonNullable<BadgeProps['size']>, string> = {

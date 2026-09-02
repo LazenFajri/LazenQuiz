@@ -63,12 +63,19 @@ export function QuizPlay({ quiz, onComplete }: QuizPlayProps) {
   const handleFinish = useCallback(() => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    const finalAnswers = answersRef.current;
+    const currentAnswers = answersRef.current;
+    
+    // Ensure all questions have an entry, even if unanswered
+    const finalAnswers = quiz.questions.map((q) => {
+      const existing = currentAnswers.find((a) => a.questionId === q.id);
+      return existing || { questionId: q.id, selected: null, correct: q.correct };
+    });
+
     const score = finalAnswers.filter((a) => a.selected === a.correct).length;
     const durationSeconds = Math.round((Date.now() - startTimeRef.current) / 1000);
     setIsFinished(true);
     onComplete({ score, total, durationSeconds, answers: finalAnswers });
-  }, [total, onComplete]);
+  }, [quiz.questions, total, onComplete]);
 
   const answersRef = useRef(answers);
   answersRef.current = answers;

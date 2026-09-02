@@ -69,18 +69,18 @@ export function QuizSetupForm({
   return (
     <div className="w-full max-w-2xl mx-auto py-2 sm:py-6 px-1 sm:px-0">
       <ScrollReveal direction="up" delay={0}>
-        <div className="bg-white rounded-3xl sm:rounded-4xl p-5 sm:p-10 border border-[#ECEEF8] shadow-soft-lg">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl sm:rounded-4xl p-5 sm:p-10 border border-[#ECEEF8] dark:border-slate-800 shadow-soft-lg">
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8">
             <ScrollReveal direction="pop" delay={100}>
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-[#F0EDFF] text-[#6C5CE7] flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-soft-sm">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-[#F0EDFF] dark:bg-indigo-950/60 text-[#6C5CE7] flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-soft-sm">
                 <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-[#6C5CE7] animate-pulse-glow" />
               </div>
             </ScrollReveal>
-            <h1 className="font-display text-2xl sm:text-4xl font-black text-[#1E2238] tracking-tight mb-1.5 sm:mb-2">
+            <h1 className="font-display text-2xl sm:text-4xl font-black text-[#1E2238] dark:text-white tracking-tight mb-1.5 sm:mb-2">
               Create Custom Quiz
             </h1>
-            <p className="text-xs sm:text-sm text-[#8C93B0] font-medium max-w-sm mx-auto">
+            <p className="text-xs sm:text-sm text-[#8C93B0] dark:text-slate-400 font-medium max-w-sm mx-auto">
               Atur topik kuis favoritmu, pilih level kesulitan, dan mulai mainkan tantangannya!
             </p>
           </div>
@@ -90,7 +90,7 @@ export function QuizSetupForm({
             <ScrollReveal direction="up" delay={120}>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-extrabold text-[#1E2238] uppercase tracking-wider">
+                  <label className="text-xs font-extrabold text-[#1E2238] dark:text-white uppercase tracking-wider">
                     1. Pilih Topik / Subjek
                   </label>
                   {topic && (
@@ -109,12 +109,12 @@ export function QuizSetupForm({
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="Contoh: Teknologi, Science, Sejarah Dunia, Film..."
-                  className="w-full px-4 sm:px-5 py-3 sm:py-3.5 bg-[#F8FAFC] border-2 border-[#E2E8F0] rounded-2xl focus:outline-none focus:border-[#6C5CE7] focus:bg-white text-[#1E2238] placeholder-[#94A3B8] text-xs sm:text-sm font-semibold transition-all shadow-inner"
+                  className="w-full px-4 sm:px-5 py-3 sm:py-3.5 bg-[#F8FAFC] dark:bg-slate-800 border-2 border-[#E2E8F0] dark:border-slate-700 rounded-2xl focus:outline-none focus:border-[#6C5CE7] focus:bg-white dark:focus:bg-slate-800 text-[#1E2238] dark:text-white placeholder-[#94A3B8] dark:placeholder-slate-500 text-xs sm:text-sm font-semibold transition-all shadow-inner"
                 />
 
                 {/* Quick Topic Pills */}
                 <div className="mt-2.5 sm:mt-3 flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] sm:text-[11px] font-bold text-[#8C93B0] mr-0.5">Rekomendasi:</span>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-[#8C93B0] dark:text-slate-400 mr-0.5">Rekomendasi:</span>
                   {FEATURED_CATEGORIES.map((cat) => (
                     <button
                       key={cat.id}
@@ -123,7 +123,7 @@ export function QuizSetupForm({
                       className={`text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border-2 font-bold transition-all ${
                         topic.toLowerCase() === cat.id.toLowerCase()
                           ? 'bg-[#6C5CE7] border-[#6C5CE7] text-white shadow-soft-sm'
-                          : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#6C5CE7] hover:text-[#6C5CE7]'
+                          : 'bg-white dark:bg-slate-800 border-[#E2E8F0] dark:border-slate-700 text-[#64748B] dark:text-slate-300 hover:border-[#6C5CE7] hover:text-[#6C5CE7]'
                       }`}
                     >
                       {cat.name.split('&')[0].trim()}
@@ -136,7 +136,7 @@ export function QuizSetupForm({
             {/* Difficulty Cards */}
             <ScrollReveal direction="up" delay={200}>
               <div>
-                <label className="block text-xs font-extrabold text-[#1E2238] uppercase tracking-wider mb-2.5">
+                <label className="block text-xs font-extrabold text-[#1E2238] dark:text-white uppercase tracking-wider mb-2.5">
                   2. Level Tantangan
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
@@ -149,8 +149,8 @@ export function QuizSetupForm({
                         onClick={() => setDifficulty(d.id)}
                         className={`p-3.5 sm:p-4 rounded-2xl border-2 text-left transition-all relative flex flex-col justify-between ${
                           isSelected
-                            ? 'border-[#6C5CE7] bg-[#F0EDFF] shadow-soft-sm'
-                            : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'
+                            ? 'border-[#6C5CE7] bg-[#F0EDFF] dark:bg-indigo-950/60 shadow-soft-sm'
+                            : 'border-[#E2E8F0] dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#CBD5E1] dark:hover:border-slate-600'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
@@ -158,7 +158,7 @@ export function QuizSetupForm({
                             {d.iconComponent}
                             <span
                               className={`font-display text-xs sm:text-sm font-black ${
-                                isSelected ? 'text-[#6C5CE7]' : 'text-[#1E2238]'
+                                isSelected ? 'text-[#6C5CE7] dark:text-indigo-300' : 'text-[#1E2238] dark:text-white'
                               }`}
                             >
                               {d.label}
@@ -170,7 +170,7 @@ export function QuizSetupForm({
                             </div>
                           )}
                         </div>
-                        <p className="text-[10px] sm:text-[11px] font-medium text-[#64748B]">{d.desc}</p>
+                        <p className="text-[10px] sm:text-[11px] font-medium text-[#64748B] dark:text-slate-400">{d.desc}</p>
                       </button>
                     );
                   })}
@@ -180,9 +180,9 @@ export function QuizSetupForm({
 
             {/* Question Count Selector (Fully responsive slider & wrap-free pills) */}
             <ScrollReveal direction="up" delay={280}>
-              <div className="bg-[#F8FAFC] border-2 border-[#E2E8F0] rounded-2xl p-4 sm:p-5">
+              <div className="bg-[#F8FAFC] dark:bg-slate-800/60 border-2 border-[#E2E8F0] dark:border-slate-700 rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs font-extrabold text-[#1E2238] uppercase tracking-wider">
+                  <label className="text-xs font-extrabold text-[#1E2238] dark:text-white uppercase tracking-wider">
                     3. Jumlah Soal
                   </label>
                   <span className="font-display font-black text-lg sm:text-xl text-[#6C5CE7]">
@@ -197,7 +197,7 @@ export function QuizSetupForm({
                   step="5"
                   value={questionCount}
                   onChange={(e) => setQuestionCount(Number(e.target.value))}
-                  className="w-full h-2 sm:h-2.5 bg-[#E2E8F0] rounded-lg appearance-none cursor-pointer accent-[#6C5CE7] my-2"
+                  className="w-full h-2 sm:h-2.5 bg-[#E2E8F0] dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#6C5CE7] my-2"
                 />
 
                 <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs pt-1.5">
@@ -210,7 +210,7 @@ export function QuizSetupForm({
                         className={`px-2.5 sm:px-3 py-1 rounded-xl text-xs font-extrabold text-center transition-all ${
                           questionCount === step
                             ? 'bg-[#6C5CE7] text-white shadow-soft-sm'
-                            : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#1E2238]'
+                            : 'bg-white dark:bg-slate-900 border border-[#E2E8F0] dark:border-slate-700 text-[#64748B] dark:text-slate-300 hover:text-[#1E2238] dark:hover:text-white'
                         }`}
                       >
                         {step}
